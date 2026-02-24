@@ -97,378 +97,374 @@ class BaselineJavaVersionsIntegrationTest {
             """);
     }
 
-    @Nested
-    class NoJdkAutomanagementTests {
+    @Test
+    void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
+            GradleInvoker gradle, RootProject rootProject) {
 
+        rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");
+        rootProject.buildGradle().plugins().add("com.palantir.jdks");
+
+        rootProject.buildGradle().append("""
+            javaVersions {
+                javaCompiler = 11
+                libraryTarget = 11
+                runtime = 21
+                setupJdkToolchains = false
+            }
+
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(11)
+                    vendor = JvmVendorSpec.ADOPTIUM
+                }
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                    vendor = JvmVendorSpec.ADOPTIUM
+                }
+            }
+            """);
+        rootProject.buildGradle().plugins().add("com.palantir.jdks.latest");
+
+        rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+
+        gradle.withArgs(
+                        "compileJava",
+                        "run",
+                        "-Porg.gradle.java.installations.auto-detect=false",
+                        "-Porg.gradle.java.installations.auto-download=false")
+                .buildsWithFailure();
+    }
+
+    @Nested
+    @WithJdkAutomanagement
+    class LibraryVsDistributionDetection {
         @Test
-        void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
+        void distribution_target_is_used_when_no_artifacts_are_published(
                 GradleInvoker gradle, RootProject rootProject) {
 
-            rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");
-            rootProject.buildGradle().plugins().add("com.palantir.jdks");
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
+
+            result.assertThat().output().contains("javaVersion target: 17");
+            result.assertThat().output().contains("javaVersion runtime: 21");
+        }
+
+        @Test
+        void library_target_is_used_when_no_artifacts_are_published_but_project_is_overridden_as_a_library(
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
+                }
+                """);
+
+            subProject.buildGradle().append("""
+                javaVersion {
+                    library()
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
+
+            result.assertThat().output().contains("javaVersion target: 11");
+            result.assertThat().output().contains("javaVersion runtime: 21");
+        }
+
+        @Test
+        void distribution_target_is_used_when_sls_packaging_is_used(
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
+                }
+                """);
+
+            subProject.buildGradle().plugins().add("com.palantir.sls-java-service-distribution");
+
+            InvocationResult result =
+                    gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
+
+            result.assertThat().output().contains("javaVersion target: 17");
+            result.assertThat().output().contains("javaVersion runtime: 21");
+        }
+    }
+
+    @Nested
+    @WithJdkAutomanagement
+    class Toolchains {
+        @Test
+        void when_setupJdkToolchains_true_toolchains_are_configured_by_jdks_latest(
+                GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
                 javaVersions {
                     javaCompiler = 11
                     libraryTarget = 11
                     runtime = 21
-                    setupJdkToolchains = false
-                }
-
-                java {
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(11)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(21)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
                 }
                 """);
-            rootProject.buildGradle().plugins().add("com.palantir.jdks.latest");
 
             rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+
+            InvocationResult compileJavaResult =
+                    gradle.withArgs("compileJava", "--info").buildsSuccessfully();
+
+            assertThat(extractCompileToolchain(compileJavaResult.output())).contains("amazon-corretto-11");
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+
+            InvocationResult runResult =
+                    gradle.withArgs("runMainClass", "--info").buildsSuccessfully();
+
+            assertThat(runResult).task(":compileJava").upToDate();
+            assertThat(extractRunJavaCommand(runResult.output())).contains("amazon-corretto-21.");
 
             gradle.withArgs(
                             "compileJava",
                             "run",
                             "-Porg.gradle.java.installations.auto-detect=false",
                             "-Porg.gradle.java.installations.auto-download=false")
-                    .buildsWithFailure();
+                    .buildsSuccessfully();
         }
     }
 
     @Nested
     @WithJdkAutomanagement
-    class JdksAutomanagementTests {
+    class ExplainJavaVersions {
+        @Test
+        void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    javaCompiler = 11
+                    libraryTarget = 11
+                    runtime = 17
+                }
+                """);
 
-        @Nested
-        class LibraryVsDistributionDetection {
-            @Test
-            void distribution_target_is_used_when_no_artifacts_are_published(
-                    GradleInvoker gradle, RootProject rootProject) {
+            InvocationResult result = gradle.withArgs("explainJavaVersions").buildsSuccessfully();
 
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        libraryTarget = 11
-                        distributionTarget = 17
-                        runtime = 21
+            assertThat(result).output().contains("target  = 11");
+            assertThat(result).output().contains("runtime = 17");
+            assertThat(result).output().contains("Reason:");
+        }
+    }
+
+    @Nested
+    @WithJdkAutomanagement
+    class Verification {
+        @Test
+        void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = '17_PREVIEW'
+                }
+                """);
+
+            assertThatThrownBy(() -> gradle.withArgs("compileJava").buildsWithFailure())
+                    .hasMessageContaining("cannot be run on newer JVMs");
+        }
+    }
+
+    @Nested
+    @WithJdkAutomanagement
+    class AllJavaVersionsUsed {
+
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                tasks.register('printAllJavaVersionsUsed') {
+                    inputs.property('allJavaVersionsUsed', project.extensions.javaVersions.allJavaVersionsUsed())
+                    doLast {
+                        println "allJavaVersionsUsed: ${inputs.properties.allJavaVersionsUsed.stream().sorted().toList()}"
                     }
-                    """);
-
-                InvocationResult result =
-                        gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
-
-                result.assertThat().output().contains("javaVersion target: 17");
-                result.assertThat().output().contains("javaVersion runtime: 21");
-            }
-
-            @Test
-            void library_target_is_used_when_no_artifacts_are_published_but_project_is_overridden_as_a_library(
-                    GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
-
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        libraryTarget = 11
-                        distributionTarget = 17
-                        runtime = 21
-                    }
-                    """);
-
-                subProject.buildGradle().append("""
-                    javaVersion {
-                        library()
-                    }
-                    """);
-
-                InvocationResult result =
-                        gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
-
-                result.assertThat().output().contains("javaVersion target: 11");
-                result.assertThat().output().contains("javaVersion runtime: 21");
-            }
-
-            @Test
-            void distribution_target_is_used_when_sls_packaging_is_used(
-                    GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
-
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        libraryTarget = 11
-                        distributionTarget = 17
-                        runtime = 21
-                    }
-                    """);
-
-                subProject.buildGradle().plugins().add("com.palantir.sls-java-service-distribution");
-
-                InvocationResult result =
-                        gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
-
-                result.assertThat().output().contains("javaVersion target: 17");
-                result.assertThat().output().contains("javaVersion runtime: 21");
-            }
+                }
+                """);
         }
 
-        @Nested
-        class Toolchains {
-            @Test
-            void when_setupJdkToolchains_true_toolchains_are_configured_by_jdks_latest(
-                    GradleInvoker gradle, RootProject rootProject) {
+        @Test
+        void gathers_values_from_top_level_javaVersions_extension(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    javaCompiler = 25
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
+                }
+                """);
 
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        javaCompiler = 11
-                        libraryTarget = 11
-                        runtime = 21
-                    }
-                    """);
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-                rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
-
-                InvocationResult compileJavaResult =
-                        gradle.withArgs("compileJava", "--info").buildsSuccessfully();
-
-                assertThat(extractCompileToolchain(compileJavaResult.output())).contains("amazon-corretto-11");
-
-                File compiledClass = rootProject
-                        .buildDir()
-                        .path()
-                        .resolve("classes/java/main/Main.class")
-                        .toFile();
-                assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-
-                InvocationResult runResult =
-                        gradle.withArgs("runMainClass", "--info").buildsSuccessfully();
-
-                assertThat(runResult).task(":compileJava").upToDate();
-                assertThat(extractRunJavaCommand(runResult.output())).contains("amazon-corretto-21.");
-
-                gradle.withArgs(
-                                "compileJava",
-                                "run",
-                                "-Porg.gradle.java.installations.auto-detect=false",
-                                "-Porg.gradle.java.installations.auto-download=false")
-                        .buildsSuccessfully();
-            }
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 25]");
         }
 
-        @Nested
-        class ExplainJavaVersions {
-            @Test
-            void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        javaCompiler = 11
-                        libraryTarget = 11
-                        runtime = 17
-                    }
-                    """);
+        @Test
+        void gathers_values_from_javaVersion_extensions_in_all_projects_as_well(
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
 
-                InvocationResult result = gradle.withArgs("explainJavaVersions").buildsSuccessfully();
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    javaCompiler = 25
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
+                }
+                """);
 
-                assertThat(result).output().contains("target  = 11");
-                assertThat(result).output().contains("runtime = 17");
-                assertThat(result).output().contains("Reason:");
-            }
+            subProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 22
+                    target = 23
+                    runtime = 24
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 22, 23, 24, 25]");
         }
 
-        @Nested
-        class Verification {
-            @Test
-            void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        libraryTarget = '17_PREVIEW'
-                    }
-                    """);
+        @Test
+        void propagates_task_dependencies(GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
+            rootProject.buildGradle().append("""
+                import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 
-                assertThatThrownBy(() -> gradle.withArgs("compileJava").buildsWithFailure())
-                        .hasMessageContaining("cannot be run on newer JVMs");
-            }
-        }
+                def generateJavaCompiler = tasks.register('generateJavaCompiler')
+                def generateLibraryTarget = tasks.register('generateLibraryTarget')
+                def generateDistributionTarget = tasks.register('generateDistributionTarget')
+                def generateRuntime = tasks.register('generateRuntime')
 
-        @Nested
-        class AllJavaVersionsUsed {
+                javaVersions {
+                    javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(25) })
+                    libraryTarget().set(generateLibraryTarget.map { JavaLanguageVersion.of(11) })
+                    distributionTarget().set(generateDistributionTarget.map { ChosenJavaVersion.of(17) })
+                    runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
+                }
+                """);
 
-            @BeforeEach
-            void beforeEach(RootProject rootProject) {
-                rootProject.buildGradle().append("""
-                    tasks.register('printAllJavaVersionsUsed') {
-                        inputs.property('allJavaVersionsUsed', project.extensions.javaVersions.allJavaVersionsUsed())
-                        doLast {
-                            println "allJavaVersionsUsed: ${inputs.properties.allJavaVersionsUsed.stream().sorted().toList()}"
-                        }
-                    }
-                    """);
-            }
-
-            @Test
-            void gathers_values_from_top_level_javaVersions_extension(GradleInvoker gradle, RootProject rootProject) {
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        javaCompiler = 25
-                        libraryTarget = 11
-                        distributionTarget = 17
-                        runtime = 21
-                    }
-                    """);
-
-                InvocationResult result =
-                        gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
-
-                result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 25]");
-            }
-
-            @Test
-            void gathers_values_from_javaVersion_extensions_in_all_projects_as_well(
-                    GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
-
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        javaCompiler = 25
-                        libraryTarget = 11
-                        distributionTarget = 17
-                        runtime = 21
-                    }
-                    """);
-
-                subProject.buildGradle().append("""
-                    javaVersion {
-                        javaCompiler = 22
-                        target = 23
-                        runtime = 24
-                    }
-                    """);
-
-                InvocationResult result =
-                        gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
-
-                result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 22, 23, 24, 25]");
-            }
-
-            @Test
-            void propagates_task_dependencies(GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
-                rootProject.buildGradle().append("""
+            subProject.buildGradle().append("""
                     import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 
                     def generateJavaCompiler = tasks.register('generateJavaCompiler')
-                    def generateLibraryTarget = tasks.register('generateLibraryTarget')
-                    def generateDistributionTarget = tasks.register('generateDistributionTarget')
+                    def generateTarget = tasks.register('generateTarget')
                     def generateRuntime = tasks.register('generateRuntime')
 
-                    javaVersions {
-                        javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(25) })
-                        libraryTarget().set(generateLibraryTarget.map { JavaLanguageVersion.of(11) })
-                        distributionTarget().set(generateDistributionTarget.map { ChosenJavaVersion.of(17) })
-                        runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
-                    }
-                    """);
-
-                subProject.buildGradle().append("""
-                        import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
-
-                        def generateJavaCompiler = tasks.register('generateJavaCompiler')
-                        def generateTarget = tasks.register('generateTarget')
-                        def generateRuntime = tasks.register('generateRuntime')
-
-                        javaVersion {
-                            javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(22) })
-                            target().set(generateTarget.map { ChosenJavaVersion.of(23) })
-                            runtime().set(generateRuntime.map { ChosenJavaVersion.of(24) })
-                        }
-                    """);
-
-                InvocationResult result =
-                        gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
-
-                result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 22, 23, 24, 25]");
-                result.assertThat().task(":generateJavaCompiler").upToDate();
-                result.assertThat().task(":generateLibraryTarget").upToDate();
-                result.assertThat().task(":generateDistributionTarget").upToDate();
-                result.assertThat().task(":generateRuntime").upToDate();
-                result.assertThat().task(":subProject:generateJavaCompiler").upToDate();
-                result.assertThat().task(":subProject:generateTarget").upToDate();
-                result.assertThat().task(":subProject:generateRuntime").upToDate();
-            }
-
-            @Test
-            void has_a_value_when_root_javaCompiler_is_not_set(GradleInvoker gradle, RootProject rootProject) {
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        libraryTarget = 11
-                        distributionTarget = 17
-                        runtime = 21
-                    }
-                    """);
-
-                InvocationResult result =
-                        gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
-
-                result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21]");
-            }
-
-            @Test
-            void has_a_value_when_subproject_javaCompiler_is_not_set(
-                    GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
-
-                rootProject.buildGradle().append("""
-                    javaVersions {
-                        libraryTarget = 11
-                    }
-                    """);
-
-                subProject.buildGradle().append("""
                     javaVersion {
-                        target = 17
+                        javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(22) })
+                        target().set(generateTarget.map { ChosenJavaVersion.of(23) })
+                        runtime().set(generateRuntime.map { ChosenJavaVersion.of(24) })
                     }
-                    """);
+                """);
 
-                InvocationResult result =
-                        gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-                result.assertThat().output().contains("allJavaVersionsUsed: [11, 17]");
-            }
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 22, 23, 24, 25]");
+            result.assertThat().task(":generateJavaCompiler").upToDate();
+            result.assertThat().task(":generateLibraryTarget").upToDate();
+            result.assertThat().task(":generateDistributionTarget").upToDate();
+            result.assertThat().task(":generateRuntime").upToDate();
+            result.assertThat().task(":subProject:generateJavaCompiler").upToDate();
+            result.assertThat().task(":subProject:generateTarget").upToDate();
+            result.assertThat().task(":subProject:generateRuntime").upToDate();
         }
 
-        private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
-
-        // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
-        private static void assertBytecodeVersion(
-                File file, int expectedMajorBytecodeVersion, int expectedMinorBytecodeVersion) {
-            try (InputStream stream = new FileInputStream(file);
-                    DataInputStream dis = new DataInputStream(stream)) {
-                int magic = dis.readInt();
-                if (magic != BYTECODE_IDENTIFIER) {
-                    throw new IllegalArgumentException("File " + file + " does not appear to be java bytecode");
+        @Test
+        void has_a_value_when_root_javaCompiler_is_not_set(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
                 }
-                int minorBytecodeVersion = 0xFFFF & dis.readShort();
-                int majorBytecodeVersion = 0xFFFF & dis.readShort();
+                """);
 
-                assertThat(majorBytecodeVersion).isEqualTo(expectedMajorBytecodeVersion);
-                assertThat(minorBytecodeVersion).isEqualTo(expectedMinorBytecodeVersion);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21]");
         }
 
-        private static String extractCompileToolchain(String output) {
-            Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE)
-                    .matcher(output);
-            if (!compileMatcher.find()) {
-                throw new IllegalStateException("Could not find compile toolchain in output");
-            }
-            return compileMatcher.group(1);
-        }
+        @Test
+        void has_a_value_when_subproject_javaCompiler_is_not_set(
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
 
-        private static String extractRunJavaCommand(String output) {
-            Matcher matcher = Pattern.compile("^Starting process 'command '([^']*)/bin/java''.*Main", Pattern.MULTILINE)
-                    .matcher(output);
-            if (!matcher.find()) {
-                throw new IllegalStateException("Could not find run java command in output");
-            }
-            return matcher.group(1);
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                }
+                """);
+
+            subProject.buildGradle().append("""
+                javaVersion {
+                    target = 17
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17]");
         }
+    }
+
+    private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
+
+    // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
+    private static void assertBytecodeVersion(
+            File file, int expectedMajorBytecodeVersion, int expectedMinorBytecodeVersion) {
+        try (InputStream stream = new FileInputStream(file);
+                DataInputStream dis = new DataInputStream(stream)) {
+            int magic = dis.readInt();
+            if (magic != BYTECODE_IDENTIFIER) {
+                throw new IllegalArgumentException("File " + file + " does not appear to be java bytecode");
+            }
+            int minorBytecodeVersion = 0xFFFF & dis.readShort();
+            int majorBytecodeVersion = 0xFFFF & dis.readShort();
+
+            assertThat(majorBytecodeVersion).isEqualTo(expectedMajorBytecodeVersion);
+            assertThat(minorBytecodeVersion).isEqualTo(expectedMinorBytecodeVersion);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static String extractCompileToolchain(String output) {
+        Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE)
+                .matcher(output);
+        if (!compileMatcher.find()) {
+            throw new IllegalStateException("Could not find compile toolchain in output");
+        }
+        return compileMatcher.group(1);
+    }
+
+    private static String extractRunJavaCommand(String output) {
+        Matcher matcher = Pattern.compile("^Starting process 'command '([^']*)/bin/java''.*Main", Pattern.MULTILINE)
+                .matcher(output);
+        if (!matcher.find()) {
+            throw new IllegalStateException("Could not find run java command in output");
+        }
+        return matcher.group(1);
     }
 }
