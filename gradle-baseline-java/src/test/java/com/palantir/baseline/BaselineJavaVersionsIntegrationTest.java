@@ -97,47 +97,10 @@ class BaselineJavaVersionsIntegrationTest {
             """);
     }
 
-    @Test
-    void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");
-        rootProject.buildGradle().plugins().add("com.palantir.jdks");
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                javaCompiler = 11
-                libraryTarget = 11
-                runtime = 21
-                setupJdkToolchains = false
-            }
-
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(11)
-                    vendor = JvmVendorSpec.ADOPTIUM
-                }
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                    vendor = JvmVendorSpec.ADOPTIUM
-                }
-            }
-            """);
-        rootProject.buildGradle().plugins().add("com.palantir.jdks.latest");
-
-        rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
-
-        gradle.withArgs(
-                        "compileJava",
-                        "run",
-                        "-Porg.gradle.java.installations.auto-detect=false",
-                        "-Porg.gradle.java.installations.auto-download=false")
-                .buildsWithFailure();
-    }
-
     @Nested
     @WithJdkAutomanagement
     class LibraryVsDistributionDetection {
+
         @Test
         void distribution_target_is_used_when_no_artifacts_are_published(
                 GradleInvoker gradle, RootProject rootProject) {
@@ -205,9 +168,10 @@ class BaselineJavaVersionsIntegrationTest {
     }
 
     @Nested
-    @WithJdkAutomanagement
     class Toolchains {
+
         @Test
+        @WithJdkAutomanagement
         void when_setupJdkToolchains_true_toolchains_are_configured_by_jdks_latest(
                 GradleInvoker gradle, RootProject rootProject) {
 
@@ -245,6 +209,44 @@ class BaselineJavaVersionsIntegrationTest {
                             "-Porg.gradle.java.installations.auto-detect=false",
                             "-Porg.gradle.java.installations.auto-download=false")
                     .buildsSuccessfully();
+        }
+
+        @Test
+        void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");
+            rootProject.buildGradle().plugins().add("com.palantir.jdks");
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    javaCompiler = 11
+                    libraryTarget = 11
+                    runtime = 21
+                    setupJdkToolchains = false
+                }
+
+                java {
+                    toolchain {
+                        languageVersion = JavaLanguageVersion.of(11)
+                        vendor = JvmVendorSpec.ADOPTIUM
+                    }
+                    toolchain {
+                        languageVersion = JavaLanguageVersion.of(21)
+                        vendor = JvmVendorSpec.ADOPTIUM
+                    }
+                }
+                """);
+            rootProject.buildGradle().plugins().add("com.palantir.jdks.latest");
+
+            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+
+            gradle.withArgs(
+                            "compileJava",
+                            "run",
+                            "-Porg.gradle.java.installations.auto-detect=false",
+                            "-Porg.gradle.java.installations.auto-download=false")
+                    .buildsWithFailure();
         }
     }
 
