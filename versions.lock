@@ -16,17 +16,17 @@ com.diffplug.spotless:spotless-lib-extra:3.3.1 (1 constraints: 1713d42d)
 
 com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
-com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: c7a10ffb)
+com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 5fa19db7)
 
 com.fasterxml.jackson.core:jackson-core:2.21.1 (5 constraints: 536e03c9)
 
-com.fasterxml.jackson.core:jackson-databind:2.21.1 (9 constraints: 86ca3359)
+com.fasterxml.jackson.core:jackson-databind:2.21.1 (9 constraints: 6bcaa052)
 
 com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1 (2 constraints: 8c36d494)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: fe5ebea9)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: f55ea6a9)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.1 (2 constraints: 8e2e7280)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.1 (2 constraints: 852e5a80)
 
 com.fasterxml.woodstox:woodstox-core:7.1.1 (1 constraints: 3d174926)
 
@@ -38,7 +38,7 @@ com.google.auto.service:auto-service:1.1.1 (1 constraints: 0505f435)
 
 com.google.auto.service:auto-service-annotations:1.1.1 (1 constraints: 9c0f6a86)
 
-com.google.errorprone:error_prone_annotations:2.41.0 (6 constraints: d2590cfa)
+com.google.errorprone:error_prone_annotations:2.41.0 (6 constraints: 0659d1bd)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
@@ -184,7 +184,7 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1 (1 constraints: ea130970)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1 (1 constraints: e113f16f)
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
@@ -214,23 +214,23 @@ com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.57.0 (1 constrai
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.57.0 (1 constraints: 3e05483b)
 
-com.palantir.safe-logging:logger:3.9.0 (1 constraints: c51092b2)
+com.palantir.safe-logging:logger:3.11.0 (1 constraints: c51092b2)
 
-com.palantir.safe-logging:logger-slf4j:3.9.0 (1 constraints: 070e6e42)
+com.palantir.safe-logging:logger-slf4j:3.11.0 (1 constraints: 300e8a50)
 
-com.palantir.safe-logging:logger-spi:3.9.0 (2 constraints: 1d1e0c7c)
+com.palantir.safe-logging:logger-spi:3.11.0 (2 constraints: 6f1e0ab0)
 
-com.palantir.safe-logging:preconditions:3.9.0 (4 constraints: f254b491)
+com.palantir.safe-logging:preconditions:3.11.0 (4 constraints: 6d55d953)
 
-com.palantir.safe-logging:safe-logging:3.9.0 (4 constraints: 513f92c6)
+com.palantir.safe-logging:safe-logging:3.11.0 (4 constraints: cc3f9f4e)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.86.0 (1 constraints: f1133870)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.87.0 (1 constraints: f2133b70)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.86.0 (1 constraints: 47057b3b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.87.0 (1 constraints: 48057e3b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.86.0 (1 constraints: f1133870)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.87.0 (1 constraints: f2133b70)
 
-com.palantir.sls.versions:sls-versions:1.8.0 (1 constraints: 561bda45)
+com.palantir.sls.versions:sls-versions:1.9.0 (1 constraints: 571bdd45)
 
 commons-io:commons-io:2.21.0 (4 constraints: 473eb01b)
 
