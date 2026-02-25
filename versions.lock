@@ -160,7 +160,7 @@ org.immutables:value:2.12.1 (2 constraints: ab168834)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
-org.jetbrains:annotations:26.0.2 (3 constraints: ec394310)
+org.jetbrains:annotations:26.1.0 (3 constraints: eb39e90f)
 
 org.jetbrains.kotlin:kotlin-stdlib:1.9.10 (2 constraints: c2210fe1)
 
@@ -206,13 +206,13 @@ com.palantir.gradle.jdks:gradle-jdks-setup:0.71.0 (1 constraints: 910f4f92)
 
 com.palantir.gradle.jdks:gradle-jdks-setup-common:0.71.0 (3 constraints: 173b3f42)
 
-com.palantir.gradle.plugintesting:configuration-cache-spec:0.59.0 (1 constraints: 40054e3b)
+com.palantir.gradle.plugintesting:configuration-cache-spec:0.60.0 (1 constraints: 3805373b)
 
-com.palantir.gradle.plugintesting:discover-tests-cli:0.59.0 (1 constraints: 40054e3b)
+com.palantir.gradle.plugintesting:discover-tests-cli:0.60.0 (1 constraints: 3805373b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.59.0 (1 constraints: ad078c7e)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.60.0 (1 constraints: a5076d7e)
 
-com.palantir.gradle.plugintesting:plugin-testing-core:0.59.0 (1 constraints: 40054e3b)
+com.palantir.gradle.plugintesting:plugin-testing-core:0.60.0 (1 constraints: 3805373b)
 
 com.palantir.safe-logging:logger:3.11.0 (1 constraints: c51092b2)
 
