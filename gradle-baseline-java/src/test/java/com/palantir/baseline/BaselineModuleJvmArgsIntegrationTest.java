@@ -548,7 +548,8 @@ class BaselineModuleJvmArgsIntegrationTest {
             }
             """);
 
-        gradle.withArgs("jar").buildsWithFailure().assertThat().output().contains("separated by a single slash");
+        InvocationResult result = gradle.withArgs("jar").buildsWithFailure();
+        assertThat(result.output()).contains("separated by a single slash");
     }
 
     @Test

@@ -44,7 +44,7 @@ class BaselineJavaVersionsIntegrationTest {
     private static final int JAVA_11_BYTECODE = 55;
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0;
 
-    public static final String JAVA_11_COMPATIBLE_CODE = """
+    private static final String JAVA_11_COMPATIBLE_CODE = """
         import java.util.Optional;
 
         public class Main {
@@ -283,7 +283,7 @@ class BaselineJavaVersionsIntegrationTest {
 
             InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
-            result.assertThat().output().contains("cannot be run on newer JVMs");
+            assertThat(result).output().contains("cannot be run on newer JVMs");
         }
     }
 
