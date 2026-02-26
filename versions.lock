@@ -18,15 +18,15 @@ com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
 com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 62a165b9)
 
-com.fasterxml.jackson.core:jackson-core:2.21.0 (5 constraints: 4e6e84c6)
+com.fasterxml.jackson.core:jackson-core:2.21.1 (5 constraints: 536e03c9)
 
-com.fasterxml.jackson.core:jackson-databind:2.21.0 (10 constraints: 3adf276e)
+com.fasterxml.jackson.core:jackson-databind:2.21.1 (10 constraints: 3fdfb776)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.0 (2 constraints: 8c36d494)
+com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1 (2 constraints: 8c36d494)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.0 (4 constraints: f55ea6a9)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: f55ea6a9)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.0 (2 constraints: 852e5a80)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.1 (2 constraints: 852e5a80)
 
 com.fasterxml.woodstox:woodstox-core:7.1.1 (1 constraints: 3d174926)
 
@@ -160,7 +160,7 @@ org.immutables:value:2.12.1 (2 constraints: ac165a34)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
-org.jetbrains:annotations:26.0.2 (3 constraints: ec394310)
+org.jetbrains:annotations:26.1.0 (3 constraints: eb39e90f)
 
 org.jetbrains.kotlin:kotlin-stdlib:1.9.10 (2 constraints: c2210fe1)
 
@@ -184,7 +184,7 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.0 (1 constraints: e113f16f)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1 (1 constraints: e113f16f)
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
@@ -192,21 +192,21 @@ com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
 com.palantir.gradle.consistentversions:gradle-consistent-versions:3.7.0 (1 constraints: 0c050f36)
 
-com.palantir.gradle.jdks:gradle-jdks:999.999.9999-355 (2 constraints: 531c77d7)
+com.palantir.gradle.jdks:gradle-jdks:0.75.0 (2 constraints: 1b1ab812)
 
-com.palantir.gradle.jdks:gradle-jdks-distributions:999.999.9999-355 (2 constraints: 80253925)
+com.palantir.gradle.jdks:gradle-jdks-distributions:0.75.0 (2 constraints: 10216c9c)
 
-com.palantir.gradle.jdks:gradle-jdks-enablement:999.999.9999-355 (1 constraints: cd11a73b)
+com.palantir.gradle.jdks:gradle-jdks-enablement:0.75.0 (1 constraints: 950f5b92)
 
-com.palantir.gradle.jdks:gradle-jdks-json:999.999.9999-355 (1 constraints: cd11a73b)
+com.palantir.gradle.jdks:gradle-jdks-json:0.75.0 (1 constraints: 950f5b92)
 
-com.palantir.gradle.jdks:gradle-jdks-settings:999.999.9999-355 (1 constraints: 7607217d)
+com.palantir.gradle.jdks:gradle-jdks-settings:0.75.0 (1 constraints: 3e054a3b)
 
-com.palantir.gradle.jdks:gradle-jdks-setup:999.999.9999-355 (2 constraints: c42684a5)
+com.palantir.gradle.jdks:gradle-jdks-setup:0.75.0 (2 constraints: 54227609)
 
-com.palantir.gradle.jdks:gradle-jdks-setup-common:999.999.9999-355 (4 constraints: c2560440)
+com.palantir.gradle.jdks:gradle-jdks-setup-common:0.75.0 (4 constraints: e24d6eec)
 
-com.palantir.gradle.jdks:gradle-jdks-testing:999.999.9999-355 (1 constraints: 7607217d)
+com.palantir.gradle.jdks:gradle-jdks-testing:0.75.0 (1 constraints: 3e054a3b)
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.24.0 (1 constraints: 3805333b)
 
@@ -214,7 +214,7 @@ com.palantir.gradle.plugintesting:configuration-cache-spec:0.57.0 (1 constraints
 
 com.palantir.gradle.plugintesting:discover-tests-cli:0.57.0 (1 constraints: 3e05483b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.59.0 (2 constraints: 661a9c48)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.60.0 (2 constraints: 5e1a8548)
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.57.0 (1 constraints: 3e05483b)
 
@@ -288,4 +288,4 @@ org.spockframework:spock-junit4:2.3-groovy-3.0 (1 constraints: 7a1000b0)
 
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:4.1.0 (1 constraints: 07050236)
 
-org.yaml:snakeyaml:2.4 (1 constraints: 3e178d10)
+org.yaml:snakeyaml:2.5 (1 constraints: 3f178e10)
