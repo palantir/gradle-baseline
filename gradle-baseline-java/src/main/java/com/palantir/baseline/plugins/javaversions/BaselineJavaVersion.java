@@ -44,7 +44,7 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.scala.ScalaDoc;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.external.javadoc.CoreJavadocOptions;
+import org.gradle.external.javadoc.StandardJavadocDocletOptions;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
@@ -219,12 +219,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             javadocTask.doFirst(new Action<Task>() {
                 @Override
                 public void execute(Task task) {
-                    CoreJavadocOptions options = (CoreJavadocOptions) ((Javadoc) task).getOptions();
+                    StandardJavadocDocletOptions options = (StandardJavadocDocletOptions) ((Javadoc) task).getOptions();
                     if (target.get().enablePreview()) {
                         // yes, javadoc truly takes a single-dash where everyone else takes a double dash
                         options.addBooleanOption("-enable-preview", true);
                         options.setSource(target.get().javaLanguageVersion().toString());
                     }
+                    // These are common tags that are not supported by default by Javadoc, but commonly used
+                    // in e.g. openjdk, as well as in conjure-java.
+                    options.tags("apiNote", "implSpec", "implNote");
                 }
             });
         });

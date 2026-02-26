@@ -18,7 +18,6 @@ package com.palantir.baseline;
 
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
@@ -282,8 +281,9 @@ class BaselineJavaVersionsIntegrationTest {
                 }
                 """);
 
-            assertThatThrownBy(() -> gradle.withArgs("compileJava").buildsWithFailure())
-                    .hasMessageContaining("cannot be run on newer JVMs");
+            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+            result.assertThat().output().contains("cannot be run on newer JVMs");
         }
     }
 

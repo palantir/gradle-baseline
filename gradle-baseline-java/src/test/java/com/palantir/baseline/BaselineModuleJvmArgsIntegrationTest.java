@@ -17,7 +17,6 @@
 package com.palantir.baseline;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
@@ -549,8 +548,7 @@ class BaselineModuleJvmArgsIntegrationTest {
             }
             """);
 
-        assertThatThrownBy(() -> gradle.withArgs("jar").buildsWithFailure())
-                .hasMessageContaining("separated by a single slash");
+        gradle.withArgs("jar").buildsWithFailure().assertThat().output().contains("separated by a single slash");
     }
 
     @Test
