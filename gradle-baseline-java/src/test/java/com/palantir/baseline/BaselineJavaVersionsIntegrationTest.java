@@ -19,7 +19,7 @@ package com.palantir.baseline;
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.palantir.baseline.gradlejdks.InheritGradleJdks;
+import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
@@ -57,8 +57,6 @@ class BaselineJavaVersionsIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject, SubProject subProject) {
-        InheritGradleJdks.beforeEach(rootProject);
-
         rootProject.buildGradle().append("""
             allprojects {
                 repositories {
@@ -70,10 +68,18 @@ class BaselineJavaVersionsIntegrationTest {
                 mainClass = 'Main'
                 classpath = sourceSets.main.runtimeClasspath
             }
+
+            jdks {
+                daemonTarget = 21
+            }
             """);
 
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.jdks.latest");
 
         subProject.buildGradle().plugins().add("java");
         subProject.buildGradle().append("""
@@ -91,7 +97,9 @@ class BaselineJavaVersionsIntegrationTest {
     }
 
     @Nested
+    @WithJdkAutomanagement
     class LibraryVsDistributionDetection {
+
         @Test
         void distribution_target_is_used_when_no_artifacts_are_published(
                 GradleInvoker gradle, RootProject rootProject) {
@@ -160,7 +168,9 @@ class BaselineJavaVersionsIntegrationTest {
 
     @Nested
     class Toolchains {
+
         @Test
+        @WithJdkAutomanagement
         void when_setupJdkToolchains_true_toolchains_are_configured_by_jdks_latest(
                 GradleInvoker gradle, RootProject rootProject) {
 
@@ -204,6 +214,9 @@ class BaselineJavaVersionsIntegrationTest {
         void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
                 GradleInvoker gradle, RootProject rootProject) {
 
+            rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");
+            rootProject.buildGradle().plugins().add("com.palantir.jdks");
+
             rootProject.buildGradle().append("""
                 javaVersions {
                     javaCompiler = 11
@@ -237,6 +250,7 @@ class BaselineJavaVersionsIntegrationTest {
     }
 
     @Nested
+    @WithJdkAutomanagement
     class ExplainJavaVersions {
         @Test
         void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
@@ -257,6 +271,7 @@ class BaselineJavaVersionsIntegrationTest {
     }
 
     @Nested
+    @WithJdkAutomanagement
     class Verification {
         @Test
         void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
@@ -273,7 +288,9 @@ class BaselineJavaVersionsIntegrationTest {
     }
 
     @Nested
+    @WithJdkAutomanagement
     class AllJavaVersionsUsed {
+
         @BeforeEach
         void beforeEach(RootProject rootProject) {
             rootProject.buildGradle().append("""

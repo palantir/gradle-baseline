@@ -18,7 +18,7 @@ package com.palantir.baseline.plugins;
 
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 
-import com.palantir.baseline.gradlejdks.InheritGradleJdks;
+import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
@@ -32,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @GradlePluginTests
+@WithJdkAutomanagement
 @DisabledConfigurationCache
 class BaselineImmutablesTest {
     private static final String IMMUTABLES = "org.immutables:value:2.8.8";
@@ -39,14 +40,13 @@ class BaselineImmutablesTest {
 
     @BeforeEach
     void setup(RootProject rootProject) {
-        InheritGradleJdks.beforeEach(rootProject);
-
         rootProject
                 .buildGradle()
                 .plugins()
                 .add("org.unbroken-dome.test-sets")
                 .add("com.palantir.baseline-immutables")
                 .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.jdks.latest")
                 .add("java-library");
 
         rootProject.buildGradle().append("""
@@ -57,6 +57,10 @@ class BaselineImmutablesTest {
             javaVersions {
                 javaCompiler = 21
                 libraryTarget = 17
+            }
+
+            jdks {
+                daemonTarget = 21
             }
 
             task compileAll

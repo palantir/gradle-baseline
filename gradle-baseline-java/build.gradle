@@ -44,6 +44,7 @@ dependencies {
     testImplementation 'net.lingala.zip4j:zip4j'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'com.palantir.gradle.jdks:gradle-jdks-testing'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
@@ -54,6 +55,7 @@ dependencies {
     testRuntimeOnly 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
     gradlePluginForTesting 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
     gradlePluginForTesting 'com.palantir.gradle.consistentversions:gradle-consistent-versions'
+    gradlePluginForTesting 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
 
     // necessary because of https://github.com/gradle/gradle/issues/16774
     def toolingApiBuildersJar = (project as ProjectInternal).services.get(ModuleRegistry.class)

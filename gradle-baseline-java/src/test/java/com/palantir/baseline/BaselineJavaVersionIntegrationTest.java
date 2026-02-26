@@ -19,7 +19,7 @@ package com.palantir.baseline;
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.palantir.baseline.gradlejdks.InheritGradleJdks;
+import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
+@WithJdkAutomanagement
 @DisabledConfigurationCache
 class BaselineJavaVersionIntegrationTest {
     private static final int JAVA_11_BYTECODE = 55;
@@ -150,10 +151,12 @@ class BaselineJavaVersionIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject) {
-        InheritGradleJdks.beforeEach(rootProject);
-
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.jdks.latest");
 
         rootProject.buildGradle().append("""
             repositories {
@@ -170,6 +173,15 @@ class BaselineJavaVersionIntegrationTest {
                 mainClass = 'Main'
                 classpath = sourceSets.main.runtimeClasspath
             }
+
+            jdks {
+                daemonTarget = 21
+            }
+
+            javaVersions {
+                libraryTarget = 11
+            }
+
             """);
     }
 
