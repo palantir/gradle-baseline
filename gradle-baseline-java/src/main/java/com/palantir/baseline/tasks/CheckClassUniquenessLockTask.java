@@ -27,7 +27,7 @@ import difflib.Patch;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -182,7 +182,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
     private void ensureLockfileContains(String expected) {
         if (shouldFix.get()) {
             try {
-                FileUtils.writeStringToFile(lockFile, expected, StandardCharsets.UTF_8);
+                Files.writeString(lockFile.toPath(), expected);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -201,7 +201,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
 
         String onDisk;
         try {
-            onDisk = FileUtils.readFileToString(lockFile, StandardCharsets.UTF_8);
+            onDisk = Files.readString(lockFile.toPath());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
