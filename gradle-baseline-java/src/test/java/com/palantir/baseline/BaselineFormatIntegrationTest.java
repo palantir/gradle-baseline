@@ -41,7 +41,6 @@ import org.junit.jupiter.api.Test;
 @DisabledConfigurationCache
 public class BaselineFormatIntegrationTest {
 
-    @SuppressWarnings("for-rollout:deprecation")
     @BeforeEach
     void setup(RootProject rootProject) throws IOException {
         FileUtils.copyDirectory(
