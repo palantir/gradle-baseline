@@ -25,6 +25,9 @@ import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import difflib.DiffUtils;
 import difflib.Patch;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -34,6 +37,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Named;
@@ -47,7 +51,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
-import org.gradle.util.GFileUtils;
 
 @CacheableTask
 public abstract class CheckClassUniquenessLockTask extends DefaultTask {
@@ -175,10 +178,14 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                 .collect(Collectors.joining(", ", "[", "]"));
     }
 
-    @SuppressWarnings({"for-rollout:IllegalMethodCalledDuringTaskExecution", "for-rollout:deprecation"})
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private void ensureLockfileContains(String expected) {
         if (shouldFix.get()) {
-            GFileUtils.writeFile(expected, lockFile);
+            try {
+                Files.writeString(lockFile.toPath(), expected);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
             getLogger()
                     .lifecycle("Updated {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
             return;
@@ -192,8 +199,12 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                     "./gradlew checkClassUniqueness --fix");
         }
 
-        @SuppressWarnings("for-rollout:deprecation")
-        String onDisk = GFileUtils.readFile(lockFile);
+        String onDisk;
+        try {
+            onDisk = Files.readString(lockFile.toPath());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         if (!onDisk.equals(expected)) {
             List<String> onDiskLines = Splitter.on('\n').splitToList(onDisk);
             Patch<String> diff = DiffUtils.diff(onDiskLines, Splitter.on('\n').splitToList(expected));
@@ -221,11 +232,11 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
         }
     }
 
-    @SuppressWarnings({"for-rollout:IllegalMethodCalledDuringTaskExecution", "for-rollout:deprecation"})
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private void ensureLockfileDoesNotExist() {
         if (lockFile.exists()) {
             if (shouldFix.get()) {
-                GFileUtils.deleteQuietly(lockFile);
+                FileUtils.deleteQuietly(lockFile);
                 getLogger()
                         .lifecycle(
                                 "Deleted {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));

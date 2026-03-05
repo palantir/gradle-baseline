@@ -11,6 +11,7 @@ import org.gradle.api.internal.project.ProjectInternal
 dependencies {
     implementation gradleApi()
     implementation 'com.palantir.gradle.idea-configuration:gradle-idea-configuration'
+    implementation 'commons-io:commons-io'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
     implementation 'com.github.ben-manes.caffeine:caffeine'

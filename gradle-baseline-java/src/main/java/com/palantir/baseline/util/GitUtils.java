@@ -17,18 +17,17 @@
 package com.palantir.baseline.util;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.gradle.util.GFileUtils;
 
 public final class GitUtils {
     private static final Pattern GIT_ORIGIN = Pattern.compile("url = git@([^:]+):([^.]+).git");
 
     public static Optional<String> maybeGitHubUri() {
         try {
-            @SuppressWarnings("for-rollout:deprecation")
-            String gitConfigContents = GFileUtils.readFile(new File(".git/config"));
+            String gitConfigContents = Files.readString(new File(".git/config").toPath());
             Matcher matcher = GIT_ORIGIN.matcher(gitConfigContents);
             if (matcher.find()) {
                 return Optional.of(String.format("https://%s/%s", matcher.group(1), matcher.group(2)));

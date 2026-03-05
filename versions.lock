@@ -88,6 +88,8 @@ com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
 
 commons-codec:commons-codec:1.19.0 (2 constraints: 1c1e1787)
 
+commons-io:commons-io:2.21.0 (5 constraints: f2503923)
+
 dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
 
 javax.annotation:javax.annotation-api:1.2 (1 constraints: e01020af)
@@ -235,8 +237,6 @@ com.palantir.sls-packaging:gradle-sls-packaging:7.87.0 (1 constraints: 48057e3b)
 com.palantir.sls-packaging:gradle-sls-packaging-api:7.87.0 (1 constraints: f2133b70)
 
 com.palantir.sls.versions:sls-versions:1.9.0 (1 constraints: 571bdd45)
-
-commons-io:commons-io:2.21.0 (5 constraints: f2503923)
 
 info.picocli:picocli:4.7.7 (1 constraints: 2816dcdd)
 
