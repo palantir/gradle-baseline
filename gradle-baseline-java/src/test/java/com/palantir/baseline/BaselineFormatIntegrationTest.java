@@ -112,7 +112,7 @@ public class BaselineFormatIntegrationTest {
         FileUtils.copyDirectory(inputDir, testedDir);
 
         standardBuildFile(rootProject);
-        rootProject.gradlePropertiesFile().appendProperty("com.palantir.baseline-format.eclipse", "true");
+        rootProject.gradlePropertiesFile().setProperty("com.palantir.baseline-format.eclipse", "true");
 
         InvocationResult result = gradle.withArgs(":format").buildsSuccessfully();
 
@@ -132,7 +132,7 @@ public class BaselineFormatIntegrationTest {
 
         standardBuildFile(rootProject).plugins().add("com.palantir.java-format");
 
-        rootProject.gradlePropertiesFile().appendProperty("com.palantir.baseline-format.palantir-java-format", "true");
+        rootProject.gradlePropertiesFile().setProperty("com.palantir.baseline-format.palantir-java-format", "true");
 
         InvocationResult result = gradle.withArgs(":format").buildsSuccessfully();
 
