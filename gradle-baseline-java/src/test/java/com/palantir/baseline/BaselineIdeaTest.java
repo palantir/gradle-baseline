@@ -19,14 +19,12 @@ package com.palantir.baseline;
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
-import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
-@DisabledConfigurationCache
 class BaselineIdeaTest {
 
     @BeforeEach
