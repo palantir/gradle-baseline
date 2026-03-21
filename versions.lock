@@ -22,9 +22,9 @@ com.fasterxml.jackson.core:jackson-core:2.21.1 (5 constraints: 536e03c9)
 
 com.fasterxml.jackson.core:jackson-databind:2.21.1 (10 constraints: 3fdfb776)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1 (2 constraints: 8c36d494)
+com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1 (2 constraints: 8e366c95)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: f55ea6a9)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: f75e24ab)
 
 com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.1 (2 constraints: 852e5a80)
 
@@ -192,7 +192,7 @@ com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
 com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
-com.palantir.gradle.consistentversions:gradle-consistent-versions:3.7.0 (1 constraints: 0c050f36)
+com.palantir.gradle.consistentversions:gradle-consistent-versions:3.15.0 (1 constraints: 3b05443b)
 
 com.palantir.gradle.jdks:gradle-jdks:0.77.0 (2 constraints: 1d1a3413)
 
