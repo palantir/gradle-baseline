@@ -1,5 +1,5 @@
 com.fasterxml.jackson.core:jackson-annotations = 2.21
-com.github.ben-manes.caffeine:caffeine = 3.2.2
+com.github.ben-manes.caffeine:caffeine = 3.2.3
 com.google.guava:guava = 33.5.0-jre
 com.google.auto.service:* = 1.1.1
 com.palantir.gradle.plugintesting:gradle-plugin-testing-junit = 0.43.0
