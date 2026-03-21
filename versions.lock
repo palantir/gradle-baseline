@@ -60,7 +60,7 @@ com.palantir.baseline-error-prone:gradle-baseline-error-prone:0.7.0 (1 constrain
 
 com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.9.0 (4 constraints: cb43f715)
 
-com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.7.0 (4 constraints: 8c457539)
+com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 90454d3c)
 
 com.palantir.gradle.utils:environment-variables:0.23.0 (3 constraints: ea3105fd)
 
