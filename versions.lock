@@ -162,7 +162,7 @@ org.immutables:value:2.12.1 (2 constraints: ad168e34)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
-org.jetbrains:annotations:26.1.0 (3 constraints: eb39e90f)
+org.jetbrains:annotations:26.1.0 (3 constraints: ea39c00f)
 
 org.jetbrains.kotlin:kotlin-stdlib:1.9.10 (2 constraints: c2210fe1)
 
@@ -220,15 +220,15 @@ com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.64.0 (2 constrai
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.64.0 (1 constraints: 3c05433b)
 
-com.palantir.safe-logging:logger:3.11.0 (1 constraints: c51092b2)
+com.palantir.safe-logging:logger:3.13.0 (1 constraints: c51092b2)
 
-com.palantir.safe-logging:logger-slf4j:3.11.0 (1 constraints: 300e8a50)
+com.palantir.safe-logging:logger-slf4j:3.13.0 (1 constraints: 320e9050)
 
-com.palantir.safe-logging:logger-spi:3.11.0 (2 constraints: 6f1e0ab0)
+com.palantir.safe-logging:logger-spi:3.13.0 (2 constraints: 731e76b0)
 
-com.palantir.safe-logging:preconditions:3.11.0 (4 constraints: 6d55d953)
+com.palantir.safe-logging:preconditions:3.13.0 (4 constraints: 6d55d953)
 
-com.palantir.safe-logging:safe-logging:3.11.0 (4 constraints: cc3f9f4e)
+com.palantir.safe-logging:safe-logging:3.13.0 (4 constraints: d23feb50)
 
 com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.87.0 (1 constraints: f2133b70)
 
