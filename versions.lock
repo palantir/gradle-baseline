@@ -16,17 +16,17 @@ com.diffplug.spotless:spotless-lib-extra:3.3.1 (1 constraints: 1713d42d)
 
 com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
-com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 62a165b9)
+com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 63a166b9)
 
 com.fasterxml.jackson.core:jackson-core:2.21.1 (5 constraints: 536e03c9)
 
-com.fasterxml.jackson.core:jackson-databind:2.21.1 (10 constraints: 40dfbe77)
+com.fasterxml.jackson.core:jackson-databind:2.21.1 (10 constraints: 43df7a78)
 
 com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1 (2 constraints: 8e366c95)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: f75e24ab)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: f85e27ab)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.1 (2 constraints: 852e5a80)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.1 (2 constraints: 862e5d80)
 
 com.fasterxml.woodstox:woodstox-core:7.1.1 (1 constraints: 3d174926)
 
@@ -186,7 +186,7 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1 (1 constraints: e113f16f)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1 (1 constraints: e213f46f)
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
@@ -220,23 +220,23 @@ com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.64.0 (2 constrai
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.64.0 (1 constraints: 3c05433b)
 
-com.palantir.safe-logging:logger:3.13.0 (1 constraints: c51092b2)
+com.palantir.safe-logging:logger:3.13.0 (1 constraints: ef106fc3)
 
 com.palantir.safe-logging:logger-slf4j:3.13.0 (1 constraints: 320e9050)
 
 com.palantir.safe-logging:logger-spi:3.13.0 (2 constraints: 731e76b0)
 
-com.palantir.safe-logging:preconditions:3.13.0 (4 constraints: 6d55d953)
+com.palantir.safe-logging:preconditions:3.13.0 (4 constraints: 9d55f6ab)
 
-com.palantir.safe-logging:safe-logging:3.13.0 (4 constraints: d23feb50)
+com.palantir.safe-logging:safe-logging:3.13.0 (4 constraints: fc3fd590)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.87.0 (1 constraints: f2133b70)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.88.0 (1 constraints: f3133e70)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.87.0 (1 constraints: 48057e3b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.88.0 (1 constraints: 4905813b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.87.0 (1 constraints: f2133b70)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.88.0 (1 constraints: f3133e70)
 
-com.palantir.sls.versions:sls-versions:1.9.0 (1 constraints: 571bdd45)
+com.palantir.sls.versions:sls-versions:1.11.0 (1 constraints: 801b4961)
 
 info.picocli:picocli:4.7.7 (1 constraints: 2816dcdd)
 
