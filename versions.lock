@@ -60,7 +60,7 @@ com.palantir.baseline-error-prone:gradle-baseline-error-prone:0.7.0 (1 constrain
 
 com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.9.0 (4 constraints: cb43f715)
 
-com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 90454d3c)
+com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9545883d)
 
 com.palantir.gradle.utils:environment-variables:0.23.0 (3 constraints: ec3105fe)
 
@@ -98,7 +98,7 @@ javax.inject:javax.inject:1 (7 constraints: e66230f0)
 
 net.ltgt.gradle:gradle-errorprone-plugin:4.3.0 (2 constraints: 3d366a24)
 
-one.util:streamex:0.8.4 (3 constraints: ce3df6ab)
+one.util:streamex:0.8.4 (4 constraints: 324db0a3)
 
 org.apache.commons:commons-lang3:3.20.0 (6 constraints: 87556868)
 
@@ -194,21 +194,21 @@ com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
 com.palantir.gradle.consistentversions:gradle-consistent-versions:3.15.0 (1 constraints: 3b05443b)
 
-com.palantir.gradle.jdks:gradle-jdks:0.77.0 (2 constraints: 1d1a3413)
+com.palantir.gradle.jdks:gradle-jdks:0.79.0 (2 constraints: 1f1ab013)
 
-com.palantir.gradle.jdks:gradle-jdks-distributions:0.77.0 (2 constraints: 1421de9c)
+com.palantir.gradle.jdks:gradle-jdks-distributions:0.79.0 (2 constraints: 1821509d)
 
-com.palantir.gradle.jdks:gradle-jdks-enablement:0.77.0 (1 constraints: 970f6192)
+com.palantir.gradle.jdks:gradle-jdks-enablement:0.79.0 (1 constraints: 990f6792)
 
-com.palantir.gradle.jdks:gradle-jdks-json:0.77.0 (1 constraints: 970f6192)
+com.palantir.gradle.jdks:gradle-jdks-json:0.79.0 (1 constraints: 990f6792)
 
-com.palantir.gradle.jdks:gradle-jdks-settings:0.77.0 (1 constraints: 4005503b)
+com.palantir.gradle.jdks:gradle-jdks-settings:0.79.0 (1 constraints: 4205563b)
 
-com.palantir.gradle.jdks:gradle-jdks-setup:0.77.0 (2 constraints: 5822ee09)
+com.palantir.gradle.jdks:gradle-jdks-setup:0.79.0 (2 constraints: 5c22660a)
 
-com.palantir.gradle.jdks:gradle-jdks-setup-common:0.77.0 (4 constraints: ea4d0cef)
+com.palantir.gradle.jdks:gradle-jdks-setup-common:0.79.0 (4 constraints: f24daaf1)
 
-com.palantir.gradle.jdks:gradle-jdks-testing:0.77.0 (1 constraints: 4005503b)
+com.palantir.gradle.jdks:gradle-jdks-testing:0.79.0 (1 constraints: 4205563b)
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.26.0 (1 constraints: 3a05393b)
 
@@ -216,7 +216,7 @@ com.palantir.gradle.plugintesting:configuration-cache-spec:0.64.0 (1 constraints
 
 com.palantir.gradle.plugintesting:discover-tests-cli:0.64.0 (1 constraints: 3c05433b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.64.0 (2 constraints: 5e1a1848)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.66.0 (2 constraints: 621a2448)
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.64.0 (1 constraints: 3c05433b)
 
