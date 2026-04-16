@@ -88,7 +88,7 @@ com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
 
 commons-codec:commons-codec:1.19.0 (2 constraints: 1c1e1787)
 
-commons-io:commons-io:2.21.0 (5 constraints: f2503923)
+commons-io:commons-io:2.21.0 (5 constraints: eb50ea21)
 
 dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
 
@@ -212,13 +212,13 @@ com.palantir.gradle.jdks:gradle-jdks-testing:0.79.0 (1 constraints: 4205563b)
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.26.0 (1 constraints: 3a05393b)
 
-com.palantir.gradle.plugintesting:configuration-cache-spec:0.66.0 (1 constraints: 3e05493b)
+com.palantir.gradle.plugintesting:configuration-cache-spec:0.67.0 (1 constraints: 3f054c3b)
 
-com.palantir.gradle.plugintesting:discover-tests-cli:0.66.0 (1 constraints: 3e05493b)
+com.palantir.gradle.plugintesting:discover-tests-cli:0.67.0 (1 constraints: 3f054c3b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.66.0 (2 constraints: fd17dc83)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.67.0 (2 constraints: 6a1a1e4a)
 
-com.palantir.gradle.plugintesting:plugin-testing-core:0.66.0 (1 constraints: 3e05493b)
+com.palantir.gradle.plugintesting:plugin-testing-core:0.67.0 (1 constraints: 3f054c3b)
 
 com.palantir.safe-logging:logger:3.13.0 (1 constraints: ef106fc3)
 
