@@ -68,7 +68,7 @@ public final class VersionsProps {
     }
 
     public static ParsedVersionsProps readVersionsProps(File propsFile) {
-        Preconditions.checkArgument(propsFile.exists(), "No " + propsFile.toPath() + " file found");
+        Preconditions.checkArgument(propsFile.exists(), "No %s file found", propsFile.toPath());
         try (Stream<String> lines = Files.lines(propsFile.toPath())) {
             return readVersionsProps(lines);
         } catch (IOException e) {
