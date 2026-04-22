@@ -13,3 +13,5 @@ rootProject.name = "gradle-baseline"
 include "gradle-baseline-java"
 include "gradle-baseline-java:test-compiler-plugins"
 include "gradle-baseline-java-config"
+
+throw new RuntimeException('''The excavator failed to run properly:\n\n''' + file('gradle/exception').text)
