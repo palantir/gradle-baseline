@@ -92,7 +92,7 @@ com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
 
 commons-codec:commons-codec:1.19.0 (2 constraints: 1c1e1787)
 
-commons-io:commons-io:2.21.0 (5 constraints: eb50ea21)
+commons-io:commons-io:2.22.0 (5 constraints: ec50c522)
 
 dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
 
