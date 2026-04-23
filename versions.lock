@@ -220,9 +220,9 @@ com.palantir.gradle.plugintesting:configuration-cache-spec:0.68.0 (1 constraints
 
 com.palantir.gradle.plugintesting:discover-tests-cli:0.68.0 (1 constraints: 40054f3b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.68.0 (2 constraints: ff174e84)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.69.0 (2 constraints: 6e1a164b)
 
-com.palantir.gradle.plugintesting:plugin-testing-core:0.68.0 (2 constraints: 1c1ff78e)
+com.palantir.gradle.plugintesting:plugin-testing-core:0.69.0 (2 constraints: 1d1ffa8e)
 
 com.palantir.safe-logging:logger:3.14.0 (1 constraints: f01072c3)
 
