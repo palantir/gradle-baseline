@@ -102,7 +102,6 @@ public class BaselineFormatIntegrationTest {
         gradle.withArgs("format", "--stacktrace").buildsSuccessfully();
     }
 
-    @SuppressWarnings("for-rollout:deprecation")
     @Test
     void eclipse_formatter_integration_test(GradleInvoker gradle, RootProject rootProject) throws IOException {
         File inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in");
@@ -121,7 +120,6 @@ public class BaselineFormatIntegrationTest {
         assertThatFilesAreTheSame(testedDir, expectedDir);
     }
 
-    @SuppressWarnings("for-rollout:deprecation")
     @Test
     void palantir_java_format_works(GradleInvoker gradle, RootProject rootProject) throws IOException {
         File inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in");
