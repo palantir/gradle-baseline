@@ -60,13 +60,13 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
             + "# Run ./gradlew checkClassUniqueness --fix to update this file\n\n";
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
-    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
+    @SuppressWarnings("VisibilityModifier")
     public final SetProperty<Configuration> configurations;
 
-    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
+    @SuppressWarnings("VisibilityModifier")
     public final Property<JarClassHasher> jarClassHasher;
 
-    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
+    @SuppressWarnings("VisibilityModifier")
     public final Property<Boolean> shouldFix;
 
     private final File lockFile;
@@ -178,8 +178,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                 .collect(Collectors.joining(", ", "[", "]"));
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
-    private void ensureLockfileContains(String expected) {
+        private void ensureLockfileContains(String expected) {
         if (shouldFix.get()) {
             try {
                 Files.writeString(lockFile.toPath(), expected);
@@ -232,8 +231,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
         }
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
-    private void ensureLockfileDoesNotExist() {
+        private void ensureLockfileDoesNotExist() {
         if (lockFile.exists()) {
             if (shouldFix.get()) {
                 FileUtils.deleteQuietly(lockFile);

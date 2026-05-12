@@ -101,8 +101,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     private static void configureBuildGradleFormatter(Project project, SpotlessExtension spotlessExtension) {
-        @SuppressWarnings("for-rollout:deprecation")
-        Path buildDir = project.getRootProject().getBuildDir().toPath();
+                Path buildDir = project.getRootProject().getBuildDir().toPath();
         Path configFile = buildDir.resolve("baseline-format").resolve("greclipse.properties");
 
         try {

@@ -92,8 +92,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private void applyToJavaProject(Project project) {
-        @SuppressWarnings({"for-rollout:GradleTypesAsFields", "for-rollout:NonAbstractGradleType"})
-        BaselineModuleJvmArgsExtension extension =
+                BaselineModuleJvmArgsExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
         // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension

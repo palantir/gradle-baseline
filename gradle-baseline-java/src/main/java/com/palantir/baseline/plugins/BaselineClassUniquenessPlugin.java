@@ -33,8 +33,7 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin;
  * <p>The task only fails if it finds classes which have the same name but different implementations.
  */
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
-    @SuppressWarnings("for-rollout:TaskDependsOn")
-    @Override
+        @Override
     public final void apply(Project project) {
         Provider<JarClassHasher> jarClassHasher = project.getGradle()
                 .getSharedServices()

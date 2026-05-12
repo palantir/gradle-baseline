@@ -46,8 +46,7 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
  */
 public abstract class CheckExplicitSourceCompatibilityTask extends DefaultTask {
 
-    @SuppressWarnings("for-rollout:GradleTypesAsFields")
-    private final Property<Boolean> shouldFix;
+        private final Property<Boolean> shouldFix;
 
     @Inject
     public CheckExplicitSourceCompatibilityTask(ObjectFactory objectFactory) {
@@ -105,8 +104,7 @@ public abstract class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         shouldFix.set(value);
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
-    @TaskAction
+        @TaskAction
     public final void taskAction() throws IOException {
         if (getRawSourceCompat() != null) {
             // In theory, users could configure the fancy new 'java toolchain' as an alternative to explicit
@@ -138,8 +136,7 @@ public abstract class CheckExplicitSourceCompatibilityTask extends DefaultTask {
     }
 
     private JavaVersion getRawSourceCompat() {
-        @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
-        org.gradle.api.plugins.internal.DefaultJavaPluginExtension extension =
+                org.gradle.api.plugins.internal.DefaultJavaPluginExtension extension =
                 (org.gradle.api.plugins.internal.DefaultJavaPluginExtension)
                         getProject().getExtensions().getByType(JavaPluginExtension.class);
         return extension.getRawSourceCompatibility();

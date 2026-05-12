@@ -59,8 +59,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        @SuppressWarnings("for-rollout:GradleTypesAsFields")
-        BaselineJavaVersionExtension extension =
+                BaselineJavaVersionExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionExtension.class);
 
         project.getPluginManager().withPlugin("java", unused -> {

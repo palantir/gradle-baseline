@@ -129,8 +129,7 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
         }
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
-    private Path buildFile() {
+        private Path buildFile() {
         return getProject()
                 .getRootDir()
                 .toPath()
