@@ -31,7 +31,12 @@ import org.junit.jupiter.api.Test;
 public class BaselineTestingIntegrationTest {
 
     private void standardBuildFile(RootProject rootProject) {
-        rootProject.buildGradle().plugins().add("java-library").add("com.palantir.baseline-testing");
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java-library")
+                .add("com.palantir.baseline-testing")
+                .add("com.palantir.baseline-java-versions");
 
         rootProject.buildGradle().append("""
             repositories {
@@ -47,6 +52,11 @@ public class BaselineTestingIntegrationTest {
                     force 'org.junit.platform:junit-platform-launcher:1.12.0'
                     force 'org.junit.vintage:junit-vintage-engine:5.12.0'
                 }
+            }
+
+            javaVersions {
+                javaCompiler = 25
+                libraryTarget = 17
             }
             """);
     }

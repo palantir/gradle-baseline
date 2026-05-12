@@ -19,11 +19,6 @@ package com.palantir.baseline.plugins.javaversions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.junit.jupiter.api.Test;
 
