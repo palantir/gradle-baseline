@@ -207,6 +207,5 @@ gradleTestUtils {
 }
 
 javaVersion {
-    javaCompiler = 25
     runtime = 21
 }
