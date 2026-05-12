@@ -7,6 +7,7 @@ dependencies {
 
 javaVersion {
     // A BaselineJavaVersionIntegrationTest runs LogCompilerInfoPlugin in a 17 JDK
+    javaCompiler = 25
     target = 17
 }
 

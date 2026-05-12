@@ -205,3 +205,8 @@ if (gradle.startParameter.isWriteDependencyLocks()) {
 gradleTestUtils {
     configurationCacheEnabled = true
 }
+
+javaVersion {
+    javaCompiler = 25
+    runtime = 21
+}
