@@ -224,15 +224,15 @@ com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.71.0 (2 constrai
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.71.0 (2 constraints: 101f2b8d)
 
-com.palantir.safe-logging:logger:3.14.0 (1 constraints: f01072c3)
+com.palantir.safe-logging:logger:3.15.0 (1 constraints: f01072c3)
 
-com.palantir.safe-logging:logger-slf4j:3.14.0 (1 constraints: 330e9350)
+com.palantir.safe-logging:logger-slf4j:3.15.0 (1 constraints: 340e9650)
 
-com.palantir.safe-logging:logger-spi:3.14.0 (2 constraints: 751eacb0)
+com.palantir.safe-logging:logger-spi:3.15.0 (2 constraints: 771ee2b0)
 
-com.palantir.safe-logging:preconditions:3.14.0 (4 constraints: a15545ad)
+com.palantir.safe-logging:preconditions:3.15.0 (4 constraints: a15545ad)
 
-com.palantir.safe-logging:safe-logging:3.14.0 (4 constraints: 00400192)
+com.palantir.safe-logging:safe-logging:3.15.0 (4 constraints: 03402a93)
 
 com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.89.0 (1 constraints: f4134170)
 
