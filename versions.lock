@@ -136,7 +136,7 @@ org.apache.maven.resolver:maven-resolver-spi:1.9.7 (3 constraints: 6e306f6a)
 
 org.apache.maven.resolver:maven-resolver-util:1.9.7 (3 constraints: 6e306f6a)
 
-org.apache.maven.shared:maven-dependency-analyzer:1.17.0 (1 constraints: 3b053e3b)
+org.apache.maven.shared:maven-dependency-analyzer:1.17.1 (1 constraints: 3c053f3b)
 
 org.apache.maven.shared:maven-shared-utils:3.3.4 (1 constraints: e60b61f3)
 
