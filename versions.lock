@@ -178,7 +178,7 @@ org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 (2 constraints: 8118c1c5)
 
 org.jspecify:jspecify:1.0.0 (9 constraints: bf90aa32)
 
-org.ow2.asm:asm:9.10 (4 constraints: 8e45c6b1)
+org.ow2.asm:asm:9.10.1 (4 constraints: ed457cfe)
 
 org.slf4j:slf4j-api:2.0.17 (7 constraints: 037194c3)
 
