@@ -60,7 +60,7 @@ com.palantir.baseline-error-prone:gradle-baseline-error-prone:0.7.0 (1 constrain
 
 com.palantir.gradle.failure-reports:gradle-failure-reports-common:1.18.0 (1 constraints: f21c3bc2)
 
-com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 constraints: 0244db40)
+com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 constraints: 39442385)
 
 com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9545883d)
 
@@ -224,23 +224,23 @@ com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.72.0 (2 constrai
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.72.0 (2 constraints: 121f788d)
 
-com.palantir.safe-logging:logger:3.15.0 (1 constraints: f01072c3)
+com.palantir.safe-logging:logger:3.15.0 (1 constraints: f21078c3)
 
 com.palantir.safe-logging:logger-slf4j:3.15.0 (1 constraints: 340e9650)
 
 com.palantir.safe-logging:logger-spi:3.15.0 (2 constraints: 771ee2b0)
 
-com.palantir.safe-logging:preconditions:3.15.0 (4 constraints: a15545ad)
+com.palantir.safe-logging:preconditions:3.15.0 (4 constraints: a65597ae)
 
-com.palantir.safe-logging:safe-logging:3.15.0 (4 constraints: 03402a93)
+com.palantir.safe-logging:safe-logging:3.15.0 (4 constraints: 05403093)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.89.0 (1 constraints: f4134170)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.90.0 (1 constraints: ec132a70)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.89.0 (1 constraints: 4a05843b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.90.0 (1 constraints: 42056d3b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.89.0 (1 constraints: f4134170)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.90.0 (1 constraints: ec132a70)
 
-com.palantir.sls.versions:sls-versions:1.12.0 (1 constraints: 811b4c61)
+com.palantir.sls.versions:sls-versions:1.14.0 (1 constraints: 831b5261)
 
 info.picocli:picocli:4.7.7 (1 constraints: 2816dcdd)
 
