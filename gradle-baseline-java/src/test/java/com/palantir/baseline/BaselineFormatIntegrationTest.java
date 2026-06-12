@@ -231,25 +231,13 @@ public class BaselineFormatIntegrationTest {
 
     @Test
     void format_does_not_skip_packages_that_merely_start_with_generated(GradleInvoker gradle, RootProject rootProject) {
-        // Regression test: the GENERATED_MARKER exclusion used to be a plain `/generated` substring match, which
-        // accidentally excluded any package whose name started with "generated" — e.g. `generatedxforms`,
-        // `generators`, `generation`. Such directories are not generated sources and must be formatted.
         standardBuildFile(rootProject).plugins().add("com.palantir.java-format");
         rootProject.gradlePropertiesFile().setProperty("com.palantir.baseline-format.palantir-java-format", "true");
 
-        String malformedJavaFile = """
+        rootProject.file("src/main/java/test/generatedxforms/Test.java").overwrite("""
             package test.generatedxforms;
             public class Test { Void test() {} }
-            """;
-        String formattedJavaFile = """
-            package test.generatedxforms;
-
-            public class Test {
-                Void test() {}
-            }
-            """;
-
-        rootProject.file("src/main/java/test/generatedxforms/Test.java").overwrite(malformedJavaFile);
+            """);
 
         InvocationResult result = gradle.withArgs(":format").buildsSuccessfully();
 
@@ -257,7 +245,13 @@ public class BaselineFormatIntegrationTest {
         rootProject
                 .file("src/main/java/test/generatedxforms/Test.java")
                 .assertThat()
-                .hasContent(formattedJavaFile);
+                .hasContent("""
+                    package test.generatedxforms;
+
+                    public class Test {
+                        Void test() {}
+                    }
+                    """);
     }
 
     @Test
