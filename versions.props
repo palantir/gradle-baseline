@@ -18,7 +18,7 @@ com.puppycrawl.tools:checkstyle = 12.3.1
 com.palantir.gradle.utils:* = 0.24.0
 com.palantir.gradle.failure-reports:* = 1.18.0
 com.palantir.gradle.idea-configuration:gradle-idea-configuration = 0.8.0
-com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.27.0
+com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.28.0
 
 
 # test deps
