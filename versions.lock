@@ -18,15 +18,15 @@ com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
 com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 63a166b9)
 
-com.fasterxml.jackson.core:jackson-core:2.21.1 (5 constraints: 536e03c9)
+com.fasterxml.jackson.core:jackson-core:2.21.4 (5 constraints: 626e80d0)
 
-com.fasterxml.jackson.core:jackson-databind:2.21.1 (10 constraints: 44df8379)
+com.fasterxml.jackson.core:jackson-databind:2.21.4 (10 constraints: 53df8292)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1 (3 constraints: c05125e7)
+com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.4 (3 constraints: c05125e7)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.1 (4 constraints: f85e27ab)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.4 (4 constraints: f85e27ab)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.1 (2 constraints: 862e5d80)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.4 (2 constraints: 862e5d80)
 
 com.fasterxml.woodstox:woodstox-core:7.1.1 (1 constraints: 3d174926)
 
@@ -190,7 +190,7 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1 (1 constraints: e213f46f)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.4 (1 constraints: e213f46f)
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
@@ -214,7 +214,7 @@ com.palantir.gradle.jdks:gradle-jdks-setup-common:0.79.0 (4 constraints: f24daaf
 
 com.palantir.gradle.jdks:gradle-jdks-testing:0.79.0 (1 constraints: 4205563b)
 
-com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.27.0 (1 constraints: 3b053c3b)
+com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.28.0 (1 constraints: 3c053f3b)
 
 com.palantir.gradle.plugintesting:configuration-cache-spec:0.72.0 (1 constraints: 3b05413b)
 
