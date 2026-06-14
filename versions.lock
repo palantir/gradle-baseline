@@ -20,13 +20,13 @@ com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 63a166b9)
 
 com.fasterxml.jackson.core:jackson-core:2.21.4 (5 constraints: 626e80d0)
 
-com.fasterxml.jackson.core:jackson-databind:2.21.4 (10 constraints: 53df8292)
+com.fasterxml.jackson.core:jackson-databind:2.21.4 (10 constraints: 5cdfa494)
 
 com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.4 (3 constraints: c05125e7)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.4 (4 constraints: f85e27ab)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.4 (4 constraints: fb5e2aab)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.4 (2 constraints: 862e5d80)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.4 (2 constraints: 892e6080)
 
 com.fasterxml.woodstox:woodstox-core:7.1.1 (1 constraints: 3d174926)
 
@@ -190,7 +190,7 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.4 (1 constraints: e213f46f)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.4 (1 constraints: e513f76f)
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
@@ -230,15 +230,15 @@ com.palantir.safe-logging:logger-slf4j:3.16.0 (1 constraints: 350e9950)
 
 com.palantir.safe-logging:logger-spi:3.16.0 (2 constraints: 791e18b1)
 
-com.palantir.safe-logging:preconditions:3.16.0 (4 constraints: a65597ae)
+com.palantir.safe-logging:preconditions:3.16.0 (4 constraints: a955e3af)
 
 com.palantir.safe-logging:safe-logging:3.16.0 (4 constraints: 08405994)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.90.0 (1 constraints: ec132a70)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.91.0 (1 constraints: ed132d70)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.90.0 (1 constraints: 42056d3b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.91.0 (1 constraints: 4305703b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.90.0 (1 constraints: ec132a70)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.91.0 (1 constraints: ed132d70)
 
 com.palantir.sls.versions:sls-versions:1.14.0 (1 constraints: 831b5261)
 
