@@ -47,7 +47,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
     // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
     private static final String PJF_PROPERTY = "com.palantir.baseline-format.palantir-java-format";
-    private static final String GENERATED_MARKER = File.separator + "generated";
     private static final String PJF_PLUGIN = "com.palantir.java-format";
 
     @Override
