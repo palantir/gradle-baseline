@@ -35,7 +35,9 @@ import java.util.stream.Stream;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
@@ -45,6 +47,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
     // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
     private static final String PJF_PROPERTY = "com.palantir.baseline-format.palantir-java-format";
+    private static final String GENERATED_MARKER = File.separator + "generated";
     private static final String PJF_PLUGIN = "com.palantir.java-format";
 
     @Override
@@ -183,6 +186,15 @@ class BaselineFormat extends AbstractBaselinePlugin {
         Path eclipseXml = eclipseConfigFile(project);
         spotlessExtension.java(java -> {
             if (!project.getPluginManager().hasPlugin(PJF_PLUGIN)) {
+                // Configure a lazy FileCollection then pass it as the target
+                ConfigurableFileCollection allJavaFiles = project.files();
+                project.getExtensions()
+                        .getByType(JavaPluginExtension.class)
+                        .getSourceSets()
+                        .all(sourceSet ->
+                                allJavaFiles.from(sourceSet.getAllJava().filter(file -> !file.toString()
+                                        .contains(GENERATED_MARKER))));
+                java.target(allJavaFiles);
                 // The palantir-java-format plugin removes unused imports already, there's no reason to
                 // rerun this step resolving google-java-format.
                 java.removeUnusedImports();
