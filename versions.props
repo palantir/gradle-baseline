@@ -24,7 +24,7 @@ com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.28.0
 # test deps
 com.fasterxml.jackson.*:* = 2.21.4
 com.github.stefanbirkner:system-rules = 1.19.0
-com.netflix.nebula:nebula-test = 10.6.2
+com.netflix.nebula:nebula-test = 12.1.0
 commons-io:* = 2.22.0
 junit:junit = 4.13.2
 net.lingala.zip4j:zip4j = 1.3.2
@@ -37,6 +37,7 @@ org.junit.vintage:* = 6.1.0
 org.junit.platform:* = 6.1.0
 com.palantir.sls-packaging:gradle-sls-packaging = 7.91.0
 com.palantir.gradle.jdks:* = 0.79.0
+org.spockframework:* = 2.4-groovy-4.0
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
 # dependency-upgrader:OFF
