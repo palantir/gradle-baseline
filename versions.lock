@@ -20,7 +20,7 @@ com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 63a166b9)
 
 com.fasterxml.jackson.core:jackson-core:2.21.4 (5 constraints: 626e80d0)
 
-com.fasterxml.jackson.core:jackson-databind:2.21.4 (10 constraints: 5cdfa494)
+com.fasterxml.jackson.core:jackson-databind:2.21.4 (10 constraints: 5fdf6a98)
 
 com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.4 (3 constraints: c05125e7)
 
@@ -42,7 +42,7 @@ com.google.errorprone:error_prone_annotations:2.49.0 (6 constraints: 1559b9c9)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.6.0-jre (17 constraints: 0076d0cf)
+com.google.guava:guava:33.6.0-jre (17 constraints: 027640d4)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -60,17 +60,17 @@ com.palantir.baseline-error-prone:gradle-baseline-error-prone:0.7.0 (1 constrain
 
 com.palantir.gradle.failure-reports:gradle-failure-reports-common:1.18.0 (1 constraints: f21c3bc2)
 
-com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 constraints: 704445bc)
+com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 constraints: a044aaf7)
 
 com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9645f43d)
 
-com.palantir.gradle.utils:environment-variables:0.24.0 (3 constraints: ed3185fe)
+com.palantir.gradle.utils:environment-variables:0.24.0 (3 constraints: ee31d7fe)
 
-com.palantir.gradle.utils:exec:0.24.0 (2 constraints: be1e11b5)
+com.palantir.gradle.utils:exec:0.24.0 (2 constraints: bf1e40b5)
 
-com.palantir.gradle.utils:lazily-configured-mapping:0.24.0 (2 constraints: c51465bd)
+com.palantir.gradle.utils:lazily-configured-mapping:0.24.0 (2 constraints: c61468bd)
 
-com.palantir.gradle.utils:platform:0.24.0 (7 constraints: f0838fad)
+com.palantir.gradle.utils:platform:0.24.0 (7 constraints: f58309b2)
 
 com.palantir.gradle.utils:providers:0.24.0 (1 constraints: 710de031)
 
@@ -92,7 +92,7 @@ com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
 
 commons-codec:commons-codec:1.19.0 (2 constraints: 1c1e1787)
 
-commons-io:commons-io:2.22.0 (5 constraints: ed50f522)
+commons-io:commons-io:2.22.0 (5 constraints: ef501924)
 
 dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
 
@@ -162,7 +162,7 @@ org.eclipse.sisu:org.eclipse.sisu.inject:0.3.5 (3 constraints: 852caa93)
 
 org.eclipse.sisu:org.eclipse.sisu.plexus:0.3.5 (2 constraints: 141abc34)
 
-org.immutables:value:2.12.2 (2 constraints: ae16c234)
+org.immutables:value:2.12.2 (2 constraints: af16c334)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
@@ -178,7 +178,7 @@ org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 (2 constraints: 8118c1c5)
 
 org.jspecify:jspecify:1.0.0 (9 constraints: bf90aa32)
 
-org.ow2.asm:asm:9.10.1 (4 constraints: ed457cfe)
+org.ow2.asm:asm:9.10.1 (4 constraints: 15463428)
 
 org.slf4j:slf4j-api:2.0.17 (7 constraints: 037194c3)
 
@@ -198,21 +198,21 @@ com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
 com.palantir.gradle.consistentversions:gradle-consistent-versions:3.16.0 (1 constraints: 3c05473b)
 
-com.palantir.gradle.jdks:gradle-jdks:0.79.0 (2 constraints: 1f1ab013)
+com.palantir.gradle.jdks:gradle-jdks:0.81.0 (2 constraints: 181aff11)
 
-com.palantir.gradle.jdks:gradle-jdks-distributions:0.79.0 (2 constraints: 1821509d)
+com.palantir.gradle.jdks:gradle-jdks-distributions:0.81.0 (2 constraints: 0a21c39b)
 
-com.palantir.gradle.jdks:gradle-jdks-enablement:0.79.0 (1 constraints: 990f6792)
+com.palantir.gradle.jdks:gradle-jdks-enablement:0.81.0 (1 constraints: 920f5392)
 
-com.palantir.gradle.jdks:gradle-jdks-json:0.79.0 (1 constraints: 990f6792)
+com.palantir.gradle.jdks:gradle-jdks-json:0.81.0 (1 constraints: 920f5392)
 
-com.palantir.gradle.jdks:gradle-jdks-settings:0.79.0 (1 constraints: 4205563b)
+com.palantir.gradle.jdks:gradle-jdks-settings:0.81.0 (1 constraints: 3b05423b)
 
-com.palantir.gradle.jdks:gradle-jdks-setup:0.79.0 (2 constraints: 5c22660a)
+com.palantir.gradle.jdks:gradle-jdks-setup:0.81.0 (2 constraints: 4e22c408)
 
-com.palantir.gradle.jdks:gradle-jdks-setup-common:0.79.0 (4 constraints: f24daaf1)
+com.palantir.gradle.jdks:gradle-jdks-setup-common:0.81.0 (4 constraints: d64d85e8)
 
-com.palantir.gradle.jdks:gradle-jdks-testing:0.79.0 (1 constraints: 4205563b)
+com.palantir.gradle.jdks:gradle-jdks-testing:0.81.0 (1 constraints: 3b05423b)
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.28.0 (1 constraints: 3c053f3b)
 
@@ -220,7 +220,7 @@ com.palantir.gradle.plugintesting:configuration-cache-spec:0.73.0 (1 constraints
 
 com.palantir.gradle.plugintesting:discover-tests-cli:0.73.0 (1 constraints: 3c05443b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.73.0 (2 constraints: 6a1a374a)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.73.0 (2 constraints: 671a2f4a)
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.73.0 (2 constraints: 141fc58d)
 
@@ -264,7 +264,7 @@ org.hamcrest:hamcrest:3.0 (2 constraints: 42185076)
 
 org.hamcrest:hamcrest-core:3.0 (2 constraints: 720acabf)
 
-org.immutables:serial:2.12.2 (1 constraints: 761145ef)
+org.immutables:serial:2.12.2 (1 constraints: 771146ef)
 
 org.junit.jupiter:junit-jupiter:6.1.0 (1 constraints: 48070b70)
 
