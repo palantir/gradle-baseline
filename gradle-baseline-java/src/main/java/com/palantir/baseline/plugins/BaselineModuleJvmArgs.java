@@ -46,6 +46,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
@@ -83,6 +84,9 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     @Inject
     protected abstract ConfigurationContainer getConfigurations();
 
+    @Inject
+    protected abstract ObjectFactory getObjectFactory();
+
     @Override
     @SuppressWarnings("checkstyle:MethodLength")
     public final void apply(Project project) {
@@ -113,13 +117,15 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
         project.getTasks().withType(Test.class).configureEach(test -> {
             test.getJvmArgumentProviders()
-                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(test, test::getClasspath));
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(
+                            getObjectFactory(), test, test::getClasspath));
             setTaskInputsFromExtension(test, extension);
         });
 
         project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
             javaExec.getJvmArgumentProviders()
-                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(javaExec, javaExec::getClasspath));
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(
+                            getObjectFactory(), javaExec, javaExec::getClasspath));
             setTaskInputsFromExtension(javaExec, extension);
         });
 
@@ -158,14 +164,17 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         project.getTasks()
                 .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                 .configure(javaCompile -> {
-                    configureJavaCompile(sourceSet, extension, javaCompile);
+                    configureJavaCompile(getObjectFactory(), sourceSet, extension, javaCompile);
                 });
 
         configureJavadoc(project, sourceSet, extension);
     }
 
     private static void configureJavaCompile(
-            SourceSet sourceSet, BaselineModuleJvmArgsExtension extension, JavaCompile javaCompile) {
+            ObjectFactory objectFactory,
+            SourceSet sourceSet,
+            BaselineModuleJvmArgsExtension extension,
+            JavaCompile javaCompile) {
 
         // We will *always* fork the compiler - for both consistency and correctness:
         // Consistency: when fork=false, Gradle will sometimes still make a forked Gradle worker daemon
@@ -189,7 +198,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 .getOptions()
                 .getForkOptions()
                 .getJvmArgumentProviders()
-                .add(ModuleJvmArgsArgumentProvider.fromJustClasspath(javaCompile, sourceSet::getAnnotationProcessorPath)
+                .add(ModuleJvmArgsArgumentProvider.fromJustClasspath(
+                                objectFactory, javaCompile, sourceSet::getAnnotationProcessorPath)
                         .withExtraDescription("forkArgs"));
 
         // For the compiler args, we do not want any --add-exports/--add-opens:
@@ -202,7 +212,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         javaCompile
                 .getOptions()
                 .getCompilerArgumentProviders()
-                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javaCompile)
+                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(objectFactory, javaCompile)
                         .withExtraDescription("compilerArgs"));
 
         setTaskInputsFromExtension(javaCompile, extension);
@@ -234,7 +244,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                         return;
                     }
 
-                    Set<String> exportValuesRaw = ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javadoc)
+                    Set<String> exportValuesRaw = ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(
+                                    getObjectFactory(), javadoc)
                             .configureWithClasspath(() -> annotationProcessorPath)
                             // Javadoc runs as *compilation* which means that everything that is normally an
                             // opens at runtime needs to be exports. Since we need to use the horrible
@@ -402,12 +413,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         }
 
         public static ModuleJvmArgsArgumentProvider fromJustClasspath(
-                Task task, Callable<FileCollection> classpathCallable) {
-            return create(task).configureWithClasspath(classpathCallable);
+                ObjectFactory objectFactory, Task task, Callable<FileCollection> classpathCallable) {
+            return create(objectFactory, task).configureWithClasspath(classpathCallable);
         }
 
-        public static ModuleJvmArgsArgumentProvider fromJustExtensionForCompilation(Task task) {
-            ModuleJvmArgsArgumentProvider argumentProvider = create(task);
+        public static ModuleJvmArgsArgumentProvider fromJustExtensionForCompilation(
+                ObjectFactory objectFactory, Task task) {
+            ModuleJvmArgsArgumentProvider argumentProvider = create(objectFactory, task);
 
             argumentProvider.getExports().addAll(extension(task).exports());
             // At runtime, `--add-opens` implies `--add-exports`. But during compilation `--add-opens` does nothing
@@ -420,8 +432,9 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         }
 
         public static ModuleJvmArgsArgumentProvider fromClasspathAndExtension(
-                Task task, Callable<FileCollection> classpathCallable) {
-            ModuleJvmArgsArgumentProvider argumentProvider = create(task).configureWithClasspath(classpathCallable);
+                ObjectFactory objectFactory, Task task, Callable<FileCollection> classpathCallable) {
+            ModuleJvmArgsArgumentProvider argumentProvider =
+                    create(objectFactory, task).configureWithClasspath(classpathCallable);
             argumentProvider.getExports().addAll(extension(task).exports());
             argumentProvider.getOpens().addAll(extension(task).opens());
             return argumentProvider;
@@ -432,9 +445,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return this;
         }
 
-        private static ModuleJvmArgsArgumentProvider create(Task task) {
-            ModuleJvmArgsArgumentProvider provider =
-                    task.getProject().getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
+        private static ModuleJvmArgsArgumentProvider create(ObjectFactory objectFactory, Task task) {
+            ModuleJvmArgsArgumentProvider provider = objectFactory.newInstance(ModuleJvmArgsArgumentProvider.class);
 
             provider.getDescription().set(task.getPath());
 
