@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
-import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import com.palantir.gradle.testing.project.SubProject;
@@ -39,7 +38,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
-@DisabledConfigurationCache
 class BaselineJavaVersionsIntegrationTest {
     private static final int JAVA_11_BYTECODE = 55;
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0;
