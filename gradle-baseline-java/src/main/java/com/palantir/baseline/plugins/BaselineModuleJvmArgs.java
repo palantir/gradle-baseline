@@ -119,14 +119,15 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
         project.getTasks().withType(Test.class).configureEach(test -> {
             test.getJvmArgumentProviders()
-                    .add(getModuleJvmArgsArgumentProviderFactory().fromClasspathAndExtension(test, test::getClasspath));
+                    .add(getModuleJvmArgsArgumentProviderFactory()
+                            .fromClasspathAndExtension(test, extension, test::getClasspath));
             setTaskInputsFromExtension(test, extension);
         });
 
         project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
             javaExec.getJvmArgumentProviders()
                     .add(getModuleJvmArgsArgumentProviderFactory()
-                            .fromClasspathAndExtension(javaExec, javaExec::getClasspath));
+                            .fromClasspathAndExtension(javaExec, extension, javaExec::getClasspath));
             setTaskInputsFromExtension(javaExec, extension);
         });
 
@@ -211,7 +212,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 .getOptions()
                 .getCompilerArgumentProviders()
                 .add(getModuleJvmArgsArgumentProviderFactory()
-                        .fromJustExtensionForCompilation(javaCompile)
+                        .fromJustExtensionForCompilation(javaCompile, extension)
                         .withExtraDescription("compilerArgs"));
 
         setTaskInputsFromExtension(javaCompile, extension);
@@ -240,7 +241,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     }
 
                     Set<String> exportValuesRaw = getModuleJvmArgsArgumentProviderFactory()
-                            .fromJustExtensionForCompilation(javadoc)
+                            .fromJustExtensionForCompilation(javadoc, extension)
                             .configureWithClasspath(sourceSet::getAnnotationProcessorPath)
                             // Javadoc runs as *compilation* which means that everything that is normally an
                             // opens at runtime needs to be exports. Since we need to use the horrible
@@ -366,24 +367,25 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return create(task).configureWithClasspath(classpathCallable);
         }
 
-        public final ModuleJvmArgsArgumentProvider fromJustExtensionForCompilation(Task task) {
+        public final ModuleJvmArgsArgumentProvider fromJustExtensionForCompilation(
+                Task task, BaselineModuleJvmArgsExtension extension) {
             ModuleJvmArgsArgumentProvider argumentProvider = create(task);
 
-            argumentProvider.getExports().addAll(extension().exports());
+            argumentProvider.getExports().addAll(extension.exports());
             // At runtime, `--add-opens` implies `--add-exports`. But during compilation `--add-opens` does nothing
             // at all and is ignored (`--add-opens` is for reflectively changing code in a module, which makes no
             // sense during compilation). People may still use the types in the module that is `--add-opens`d, so
             // we need to convert all `--add-opens` to `--add-exports` just for compilation.
-            argumentProvider.getExports().addAll(extension().opens());
+            argumentProvider.getExports().addAll(extension.opens());
 
             return argumentProvider;
         }
 
         public final ModuleJvmArgsArgumentProvider fromClasspathAndExtension(
-                Task task, Callable<FileCollection> classpathCallable) {
+                Task task, BaselineModuleJvmArgsExtension extension, Callable<FileCollection> classpathCallable) {
             ModuleJvmArgsArgumentProvider argumentProvider = create(task).configureWithClasspath(classpathCallable);
-            argumentProvider.getExports().addAll(extension().exports());
-            argumentProvider.getOpens().addAll(extension().opens());
+            argumentProvider.getExports().addAll(extension.exports());
+            argumentProvider.getOpens().addAll(extension.opens());
             return argumentProvider;
         }
 
@@ -394,10 +396,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             provider.getDescription().set(task.getPath());
 
             return provider;
-        }
-
-        private BaselineModuleJvmArgsExtension extension() {
-            return getExtensionContainer().getByType(BaselineModuleJvmArgsExtension.class);
         }
     }
 
