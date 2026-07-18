@@ -224,23 +224,23 @@ com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.74.0 (2 constrai
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.74.0 (2 constraints: 161f128e)
 
-com.palantir.safe-logging:logger:3.17.0 (1 constraints: f21078c3)
+com.palantir.safe-logging:logger:3.17.0 (1 constraints: f4107ec3)
 
 com.palantir.safe-logging:logger-slf4j:3.17.0 (1 constraints: 360e9c50)
 
 com.palantir.safe-logging:logger-spi:3.17.0 (2 constraints: 7b1e4eb1)
 
-com.palantir.safe-logging:preconditions:3.17.0 (4 constraints: a955e3af)
+com.palantir.safe-logging:preconditions:3.17.0 (4 constraints: ae5535b1)
 
-com.palantir.safe-logging:safe-logging:3.17.0 (4 constraints: 0b408295)
+com.palantir.safe-logging:safe-logging:3.17.0 (4 constraints: 0d408895)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.91.0 (1 constraints: ed132d70)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.92.0 (1 constraints: ee133070)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.91.0 (1 constraints: 4305703b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.92.0 (1 constraints: 4405733b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.91.0 (1 constraints: ed132d70)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.92.0 (1 constraints: ee133070)
 
-com.palantir.sls.versions:sls-versions:1.14.0 (1 constraints: 831b5261)
+com.palantir.sls.versions:sls-versions:1.16.0 (1 constraints: 851b5861)
 
 info.picocli:picocli:4.7.7 (1 constraints: 2816dcdd)
 
