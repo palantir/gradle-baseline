@@ -16,19 +16,19 @@ com.diffplug.spotless:spotless-lib-extra:3.3.1 (1 constraints: 1713d42d)
 
 com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
-com.fasterxml.jackson.core:jackson-annotations:2.21 (9 constraints: 63a166b9)
+com.fasterxml.jackson.core:jackson-annotations:2.22 (9 constraints: 67a1e6be)
 
-com.fasterxml.jackson.core:jackson-core:2.21.4 (5 constraints: 626e80d0)
+com.fasterxml.jackson.core:jackson-core:2.22.1 (5 constraints: 586e8ccb)
 
-com.fasterxml.jackson.core:jackson-databind:2.21.4 (10 constraints: 5fdf6a98)
+com.fasterxml.jackson.core:jackson-databind:2.22.1 (10 constraints: 57dfd689)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.4 (3 constraints: c05125e7)
+com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.22.1 (3 constraints: c05125e7)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.21.4 (4 constraints: fb5e2aab)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.22.1 (4 constraints: fb5e2aab)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.4 (2 constraints: 892e6080)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.1 (2 constraints: 892e6080)
 
-com.fasterxml.woodstox:woodstox-core:7.1.1 (1 constraints: 3d174926)
+com.fasterxml.woodstox:woodstox-core:7.2.0 (1 constraints: 3d174b26)
 
 com.github.ben-manes.caffeine:caffeine:3.2.4 (1 constraints: 0b050436)
 
@@ -152,7 +152,7 @@ org.codehaus.plexus:plexus-sec-dispatcher:2.0 (1 constraints: 5c100b99)
 
 org.codehaus.plexus:plexus-utils:3.5.1 (11 constraints: 3fa89966)
 
-org.codehaus.woodstox:stax2-api:4.2.2 (2 constraints: 6a278bd2)
+org.codehaus.woodstox:stax2-api:4.3.0 (2 constraints: 682760d2)
 
 org.eclipse.jgit:org.eclipse.jgit:6.10.1.202505221210-r (2 constraints: 322b1420)
 
@@ -190,7 +190,7 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.4 (1 constraints: e513f76f)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.1 (1 constraints: e513f76f)
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
