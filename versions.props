@@ -35,7 +35,7 @@ org.hamcrest:hamcrest-core = 3.0
 org.junit.jupiter:* = 6.1.2
 org.junit.vintage:* = 6.1.2
 org.junit.platform:* = 6.1.2
-com.palantir.sls-packaging:gradle-sls-packaging = 7.92.0
+com.palantir.sls-packaging:gradle-sls-packaging = 7.93.0
 com.palantir.gradle.jdks:* = 0.81.0
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
