@@ -20,13 +20,13 @@ com.fasterxml.jackson.core:jackson-annotations:2.22 (9 constraints: 6aa1aec0)
 
 com.fasterxml.jackson.core:jackson-core:2.22.1 (5 constraints: 586e8ccb)
 
-com.fasterxml.jackson.core:jackson-databind:2.22.1 (10 constraints: 53df4885)
+com.fasterxml.jackson.core:jackson-databind:2.22.1 (10 constraints: 4ddfe283)
 
 com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.22.1 (3 constraints: c151bde7)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.22.1 (4 constraints: fc5eeaab)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.22.1 (4 constraints: fa5eeaab)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.1 (2 constraints: 892e6080)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.1 (2 constraints: 872e6080)
 
 com.fasterxml.woodstox:woodstox-core:7.2.0 (1 constraints: 3d174b26)
 
@@ -190,7 +190,7 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.1 (1 constraints: e513f76f)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.1 (1 constraints: e313f76f)
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
@@ -234,11 +234,11 @@ com.palantir.safe-logging:preconditions:3.17.0 (4 constraints: ae5535b1)
 
 com.palantir.safe-logging:safe-logging:3.17.0 (4 constraints: 0d408895)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.93.0 (1 constraints: ef133370)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.94.0 (1 constraints: f0133670)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.93.0 (1 constraints: 4505763b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.94.0 (1 constraints: 4605793b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.93.0 (1 constraints: ef133370)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.94.0 (1 constraints: f0133670)
 
 com.palantir.sls.versions:sls-versions:1.16.0 (1 constraints: 851b5861)
 
