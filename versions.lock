@@ -278,7 +278,7 @@ org.junit.platform:junit-platform-commons:6.1.3 (2 constraints: db20e44a)
 
 org.junit.platform:junit-platform-engine:6.1.3 (4 constraints: a640b8e5)
 
-org.junit.platform:junit-platform-launcher:6.1.3 (2 constraints: 591ba362)
+org.junit.platform:junit-platform-launcher:6.1.3 (2 constraints: 5a1be262)
 
 org.junit.vintage:junit-vintage-engine:6.1.2 (1 constraints: 0b050e36)
 
