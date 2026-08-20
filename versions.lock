@@ -70,7 +70,7 @@ com.palantir.gradle.utils:exec:0.27.0 (2 constraints: c41ea7b5)
 
 com.palantir.gradle.utils:lazily-configured-mapping:0.27.0 (2 constraints: cb1401be)
 
-com.palantir.gradle.utils:platform:0.27.0 (7 constraints: 01847dbb)
+com.palantir.gradle.utils:platform:0.27.0 (7 constraints: 0284bdbb)
 
 com.palantir.gradle.utils:providers:0.27.0 (1 constraints: 740de931)
 
@@ -214,7 +214,7 @@ com.palantir.gradle.jdks:gradle-jdks-setup-common:0.82.0 (4 constraints: da4dd4e
 
 com.palantir.gradle.jdks:gradle-jdks-testing:0.82.0 (1 constraints: 3c05453b)
 
-com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.31.0 (1 constraints: 36052e3b)
+com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.32.0 (1 constraints: 3705313b)
 
 com.palantir.gradle.plugintesting:configuration-cache-spec:0.75.0 (1 constraints: 3e054a3b)
 
