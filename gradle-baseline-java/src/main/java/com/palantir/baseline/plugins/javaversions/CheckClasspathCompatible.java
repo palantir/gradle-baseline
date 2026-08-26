@@ -36,11 +36,10 @@ import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Console;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
 
-@DisableCachingByDefault(because = "Not opting into build caching; explicit opt-out is required by Gradle 9.7")
 public abstract class CheckClasspathCompatible extends DefaultTask {
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
+    private static final String GRADLE_API_JAR_PREFIX = "gradle-api-";
 
     @Console
     public abstract Property<String> getClasspathName();
@@ -55,6 +54,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
     public final void action() {
         String exampleBadClassesPerJar = getClasspath().getFiles().stream()
                 .filter(file -> file.getName().endsWith(".jar"))
+                .filter(file -> !file.getName().startsWith(GRADLE_API_JAR_PREFIX))
                 .flatMap(file ->
                         tooHighBytecodeMajorVersionInJar(file)
                                 .map(exampleClassInJar -> file.getAbsolutePath() + ": " + exampleClassInJar)

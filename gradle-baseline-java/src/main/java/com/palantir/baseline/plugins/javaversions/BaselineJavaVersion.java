@@ -51,7 +51,6 @@ import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.gradle.util.GradleVersion;
-import org.gradle.work.DisableCachingByDefault;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
 
@@ -352,7 +351,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 spec -> spec.getLanguageVersion().set(version.map(ChosenJavaVersion::javaLanguageVersion)));
     }
 
-    @DisableCachingByDefault(because = "Not opting into build caching; explicit opt-out is required by Gradle 9.7")
     public abstract static class CheckJavaVersionsTask extends DefaultTask {
         @Inject
         public CheckJavaVersionsTask() {

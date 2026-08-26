@@ -795,7 +795,7 @@ class BaselineJavaVersionIntegrationTest {
     @Nested
     class GradleJavaConfigurationSetup {
         @Test
-        void javaPluginConvention_getTargetCompatibility_produces_the_runtime_java_version(
+        void javaPluginExtension_getTargetCompatibility_produces_the_runtime_java_version(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
@@ -806,8 +806,8 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 task printTargetCompatibility() {
                     doLast {
-                        System.out.println("[[[" + project.getConvention()
-                        .getPlugin(org.gradle.api.plugins.JavaPluginConvention.class)
+                        System.out.println("[[[" + project.extensions
+                        .getByType(org.gradle.api.plugins.JavaPluginExtension.class)
                         .getTargetCompatibility() + "]]]")
                     }
                 }

@@ -28,7 +28,9 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
             id 'com.palantir.baseline-encoding'
         }
 
-        sourceCompatibility = 1.8
+        java {
+            sourceCompatibility = 1.8
+        }
 
         repositories {
             mavenLocal()
@@ -41,7 +43,9 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
             id 'java'
         }
 
-        sourceCompatibility = 1.8
+        java {
+            sourceCompatibility = 1.8
+        }
 
         repositories {
             mavenLocal()

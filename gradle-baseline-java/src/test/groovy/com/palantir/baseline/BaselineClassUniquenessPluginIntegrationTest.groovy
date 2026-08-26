@@ -23,7 +23,6 @@ import java.nio.file.Files
 import java.util.stream.Stream
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-import org.gradle.util.GFileUtils
 
 class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
@@ -67,7 +66,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         lockfile.exists()
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
         if (Boolean.getBoolean("recreate")) {
-            GFileUtils.writeFile(lockfile.text, expected)
+            Files.writeString(expected.toPath(), lockfile.text)
         }
         lockfile.text == expected.text
 
@@ -101,7 +100,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         lockfile.exists()
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
         if (Boolean.getBoolean("recreate")) {
-            GFileUtils.writeFile(lockfile.text, expected)
+            Files.writeString(expected.toPath(), lockfile.text)
         }
         lockfile.text == expected.text
     }
@@ -131,7 +130,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         lockfile.exists()
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness-with-classifier.expected.lock")
         if (Boolean.getBoolean("recreate")) {
-            GFileUtils.writeFile(lockfile.text, expected)
+            Files.writeString(expected.toPath(), lockfile.text)
         }
         lockfile.text == expected.text
     }

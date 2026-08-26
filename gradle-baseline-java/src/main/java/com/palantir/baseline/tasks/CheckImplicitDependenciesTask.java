@@ -40,9 +40,7 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
 
-@DisableCachingByDefault(because = "Not opting into build caching; explicit opt-out is required by Gradle 9.7")
 public abstract class CheckImplicitDependenciesTask extends DefaultTask {
 
     private static final Comparator<ResolvedArtifact> ARTIFACT_COMPARATOR =

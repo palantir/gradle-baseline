@@ -270,7 +270,7 @@ org.hamcrest:hamcrest-core:3.0 (2 constraints: 720acabf)
 
 org.immutables:serial:2.12.2 (1 constraints: 771146ef)
 
-org.junit.jupiter:junit-jupiter:6.1.3 (1 constraints: 4b071170)
+org.junit.jupiter:junit-jupiter:6.1.3 (1 constraints: 76070f77)
 
 org.junit.jupiter:junit-jupiter-api:6.1.3 (5 constraints: 00600196)
 

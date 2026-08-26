@@ -102,7 +102,7 @@ public class BaselineTestingIntegrationTest {
 
         rootProject
                 .buildDir()
-                .file("reports/tests/test/classes/test.JUnit4Test.html")
+                .file("test-results/test/TEST-test.JUnit4Test.xml")
                 .assertThat()
                 .exists();
     }
@@ -116,7 +116,7 @@ public class BaselineTestingIntegrationTest {
 
         rootProject
                 .buildDir()
-                .file("reports/tests/test/classes/test.JUnit5Test.html")
+                .file("test-results/test/TEST-test.JUnit5Test.xml")
                 .assertThat()
                 .exists();
     }
@@ -138,12 +138,12 @@ public class BaselineTestingIntegrationTest {
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
         rootProject
                 .buildDir()
-                .file("reports/tests/test/classes/test.JUnit4Test.html")
+                .file("test-results/test/TEST-test.JUnit4Test.xml")
                 .assertThat()
                 .exists();
         rootProject
                 .buildDir()
-                .file("reports/tests/test/classes/test.JUnit5Test.html")
+                .file("test-results/test/TEST-test.JUnit5Test.xml")
                 .assertThat()
                 .exists();
     }
@@ -163,7 +163,7 @@ public class BaselineTestingIntegrationTest {
 
         rootProject
                 .buildDir()
-                .file("reports/tests/test/classes/test.JqwikTest.html")
+                .file("test-results/test/TEST-test.JqwikTest.xml")
                 .assertThat()
                 .exists();
     }
@@ -181,7 +181,10 @@ public class BaselineTestingIntegrationTest {
         rootProject.file("src/test/groovy/test/Test.groovy").append("""
             package test
             class Test extends spock.lang.Specification {
-                def test() {}
+                def 'test'() {
+                    expect:
+                    true
+                }
             }
             """);
 
@@ -203,7 +206,7 @@ public class BaselineTestingIntegrationTest {
         InvocationResult result = gradle.withArgs("integrationTest").buildsSuccessfully();
         rootProject
                 .buildDir()
-                .file("reports/tests/integrationTest/classes/test.JUnit5Test.html")
+                .file("test-results/integrationTest/TEST-test.JUnit5Test.xml")
                 .assertThat()
                 .exists();
     }
