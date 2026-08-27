@@ -76,7 +76,9 @@ class BaselineReproducibilityIntegrationTest {
         rootProject.buildGradle().append("""
             version '1.2.3'
 
-            sourceCompatibility = 1.8
+            java {
+                sourceCompatibility = 1.8
+            }
 
             publishing {
                 publications {

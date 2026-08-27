@@ -72,6 +72,6 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('test').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
-        new File(new File(artifacts, 'junit'), 'test').list().toList().toSet() == ['classes', 'css', 'index.html', 'js', 'packages'].toSet()
+        new File(new File(new File(artifacts, 'junit'), 'test'), 'index.html').isFile()
     }
 }

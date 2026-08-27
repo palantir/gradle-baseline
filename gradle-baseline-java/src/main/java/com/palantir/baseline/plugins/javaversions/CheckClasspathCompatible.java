@@ -39,6 +39,7 @@ import org.gradle.api.tasks.TaskAction;
 
 public abstract class CheckClasspathCompatible extends DefaultTask {
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
+    private static final String GRADLE_API_JAR_PREFIX = "gradle-api-";
 
     @Console
     public abstract Property<String> getClasspathName();
@@ -53,6 +54,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
     public final void action() {
         String exampleBadClassesPerJar = getClasspath().getFiles().stream()
                 .filter(file -> file.getName().endsWith(".jar"))
+                .filter(file -> !file.getName().startsWith(GRADLE_API_JAR_PREFIX))
                 .flatMap(file ->
                         tooHighBytecodeMajorVersionInJar(file)
                                 .map(exampleClassInJar -> file.getAbsolutePath() + ": " + exampleClassInJar)

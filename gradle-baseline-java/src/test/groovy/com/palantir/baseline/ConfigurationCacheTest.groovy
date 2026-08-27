@@ -32,7 +32,7 @@ class ConfigurationCacheTest extends ConfigurationCacheSpec {
                     mavenLocal()
                 }
                  dependencies {
-                     classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.34.0'
+                     classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:3.18.0'
                  }
              }
          
