@@ -16,15 +16,15 @@ com.diffplug.spotless:spotless-lib-extra:3.3.1 (1 constraints: 1713d42d)
 
 com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
-com.fasterxml.jackson.core:jackson-annotations:2.22 (9 constraints: 6aa1aec0)
+com.fasterxml.jackson.core:jackson-annotations:2.22 (9 constraints: 03a1938c)
 
 com.fasterxml.jackson.core:jackson-core:2.22.1 (5 constraints: 586e8ccb)
 
-com.fasterxml.jackson.core:jackson-databind:2.22.1 (10 constraints: 4ddfe283)
+com.fasterxml.jackson.core:jackson-databind:2.22.1 (10 constraints: 44dffa7c)
 
 com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.22.1 (3 constraints: c151bde7)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.22.1 (4 constraints: fa5eeaab)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.22.1 (4 constraints: f15ed3a9)
 
 com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.1 (2 constraints: 872e6080)
 
@@ -42,7 +42,7 @@ com.google.errorprone:error_prone_annotations:2.50.0 (6 constraints: 0f596ac5)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.7.1-jre (17 constraints: 047656dc)
+com.google.guava:guava:33.7.1-jre (17 constraints: f67500cc)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -62,7 +62,7 @@ com.palantir.gradle.failure-reports:gradle-failure-reports-common:1.18.0 (1 cons
 
 com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 constraints: a044aaf7)
 
-com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9645f43d)
+com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9a45003e)
 
 com.palantir.gradle.utils:environment-variables:0.28.0 (3 constraints: f4318a01)
 
@@ -70,17 +70,17 @@ com.palantir.gradle.utils:exec:0.28.0 (2 constraints: c51eaab5)
 
 com.palantir.gradle.utils:lazily-configured-mapping:0.28.0 (2 constraints: cc1432be)
 
-com.palantir.gradle.utils:platform:0.28.0 (7 constraints: 0284bdbb)
+com.palantir.gradle.utils:platform:0.28.0 (7 constraints: 0384c1bb)
 
 com.palantir.gradle.utils:providers:0.28.0 (1 constraints: 750dec31)
 
 com.palantir.gradle.utils:safe-exec-commandline:0.28.0 (1 constraints: 750dec31)
 
-com.palantir.javaformat:gradle-palantir-java-format:2.73.0 (1 constraints: 3e05503b)
+com.palantir.javaformat:gradle-palantir-java-format:2.87.0 (1 constraints: 4305603b)
 
-com.palantir.javaformat:palantir-java-format-jdk-bootstrap:2.73.0 (1 constraints: ab152ad4)
+com.palantir.javaformat:palantir-java-format-jdk-bootstrap:2.87.0 (1 constraints: b0153ad4)
 
-com.palantir.javaformat:palantir-java-format-spi:2.73.0 (2 constraints: 2a2ed21c)
+com.palantir.javaformat:palantir-java-format-spi:2.87.0 (2 constraints: 342e461e)
 
 com.palantir.suppressible-error-prone:gradle-suppressible-error-prone:2.26.0 (1 constraints: 7419b3d0)
 
