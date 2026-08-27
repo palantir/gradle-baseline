@@ -190,6 +190,9 @@ configurations {
 dependencies {
     checkstyleVersion 'com.puppycrawl.tools:checkstyle'
     testImplementation 'com.palantir.gradle.plugintesting:gradle-plugin-testing-junit'
+    testImplementation 'org.spockframework:spock-core'
+    testCompileOnly 'junit:junit'
+    testRuntimeOnly 'org.spockframework:spock-junit4'
 }
 
 task writeCheckstyleVersion() {
