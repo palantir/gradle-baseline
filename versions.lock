@@ -42,7 +42,7 @@ com.google.errorprone:error_prone_annotations:2.50.0 (6 constraints: 0f596ac5)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.7.1-jre (17 constraints: f67500cc)
+com.google.guava:guava:33.7.1-jre (17 constraints: f875aad1)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -64,17 +64,17 @@ com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 
 
 com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9a45003e)
 
-com.palantir.gradle.utils:environment-variables:0.28.0 (3 constraints: f4318a01)
+com.palantir.gradle.utils:environment-variables:0.29.0 (3 constraints: f4318a01)
 
-com.palantir.gradle.utils:exec:0.28.0 (2 constraints: c51eaab5)
+com.palantir.gradle.utils:exec:0.29.0 (2 constraints: c61eadb5)
 
-com.palantir.gradle.utils:lazily-configured-mapping:0.28.0 (2 constraints: cc1432be)
+com.palantir.gradle.utils:lazily-configured-mapping:0.29.0 (2 constraints: cc1432be)
 
-com.palantir.gradle.utils:platform:0.28.0 (7 constraints: 0384c1bb)
+com.palantir.gradle.utils:platform:0.29.0 (7 constraints: 0384c1bb)
 
-com.palantir.gradle.utils:providers:0.28.0 (1 constraints: 750dec31)
+com.palantir.gradle.utils:providers:0.29.0 (1 constraints: 760def31)
 
-com.palantir.gradle.utils:safe-exec-commandline:0.28.0 (1 constraints: 750dec31)
+com.palantir.gradle.utils:safe-exec-commandline:0.29.0 (1 constraints: 760def31)
 
 com.palantir.javaformat:gradle-palantir-java-format:2.87.0 (1 constraints: 4305603b)
 
@@ -196,7 +196,7 @@ com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
 com.netflix.nebula:nebula-test:12.1.0 (2 constraints: d11d8c2c)
 
-com.palantir.gradle.consistentversions:gradle-consistent-versions:3.18.0 (1 constraints: 3e054d3b)
+com.palantir.gradle.consistentversions:gradle-consistent-versions:3.19.0 (1 constraints: 3f05503b)
 
 com.palantir.gradle.jdks:gradle-jdks:0.82.0 (2 constraints: 191a3d12)
 
@@ -223,6 +223,8 @@ com.palantir.gradle.plugintesting:discover-tests-cli:0.75.0 (1 constraints: 3e05
 com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.75.0 (2 constraints: 6b1aa94a)
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.75.0 (2 constraints: 181f5f8e)
+
+com.palantir.gradle.utils:project-dependency-utils:0.29.0 (1 constraints: ef1b1a62)
 
 com.palantir.safe-logging:logger:3.18.0 (1 constraints: f4107ec3)
 
