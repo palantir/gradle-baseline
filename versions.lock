@@ -64,11 +64,11 @@ com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 
 
 com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9a45003e)
 
-com.palantir.gradle.utils:environment-variables:0.29.0 (3 constraints: f4318a01)
+com.palantir.gradle.utils:environment-variables:0.29.0 (3 constraints: f5310a02)
 
 com.palantir.gradle.utils:exec:0.29.0 (2 constraints: c61eadb5)
 
-com.palantir.gradle.utils:lazily-configured-mapping:0.29.0 (2 constraints: cc1432be)
+com.palantir.gradle.utils:lazily-configured-mapping:0.29.0 (2 constraints: cd1463be)
 
 com.palantir.gradle.utils:platform:0.29.0 (7 constraints: 0384c1bb)
 
