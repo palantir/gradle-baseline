@@ -64,25 +64,21 @@ public final class BaselineScala extends AbstractBaselinePlugin {
             // configure target jvm mode
             String targetJvmVersion = "-target:" + SCALA_TARGET_VERSION;
             Node rootNode = xmlProvider.asNode();
-            @SuppressWarnings("for-rollout:deprecation")
             Node scalaCompilerConf = (Node) rootNode.getAt(new QName("component")).stream()
                     .filter(o -> ((Node) o).attributes().get("name").equals("ScalaCompilerConfiguration"))
                     .findFirst()
                     .orElseGet(() ->
                             rootNode.appendNode("component", ImmutableMap.of("name", "ScalaCompilerConfiguration")));
             // configure scala compilation order
-            @SuppressWarnings("for-rollout:deprecation")
             Node compilerOrder = (Node) scalaCompilerConf.getAt(new QName("option")).stream()
                     .filter(o -> ((Node) o).attributes().get("name").equals("compileOrder"))
                     .findFirst()
                     .orElseGet(() -> scalaCompilerConf.appendNode("option"));
             compilerOrder.attributes().put("name", "compileOrder");
             compilerOrder.attributes().put("value", compilerMode);
-            @SuppressWarnings("for-rollout:deprecation")
             Node parametersNode = (Node) scalaCompilerConf.getAt(new QName("parameters")).stream()
                     .findFirst()
                     .orElseGet(() -> scalaCompilerConf.appendNode("parameters"));
-            @SuppressWarnings("for-rollout:deprecation")
             Node parameter = (Node) parametersNode.getAt(new QName("parameter")).stream()
                     .filter(o -> ((Node) o).attributes().get("value").equals(targetJvmVersion))
                     .findFirst()
