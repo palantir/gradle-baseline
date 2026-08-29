@@ -194,7 +194,7 @@ com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.1 (1 constraints: 
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
-com.netflix.nebula:nebula-test:12.1.0 (2 constraints: d11d8c2c)
+com.netflix.nebula:nebula-test:12.1.0 (2 constraints: cb1d802c)
 
 com.palantir.gradle.consistentversions:gradle-consistent-versions:3.19.0 (1 constraints: 3f05503b)
 
@@ -216,13 +216,13 @@ com.palantir.gradle.jdks:gradle-jdks-testing:0.82.0 (1 constraints: 3c05453b)
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.32.0 (1 constraints: 3705313b)
 
-com.palantir.gradle.plugintesting:configuration-cache-spec:0.75.0 (1 constraints: 3e054a3b)
+com.palantir.gradle.plugintesting:configuration-cache-spec:0.76.0 (1 constraints: 3f054d3b)
 
-com.palantir.gradle.plugintesting:discover-tests-cli:0.75.0 (1 constraints: 3e054a3b)
+com.palantir.gradle.plugintesting:discover-tests-cli:0.76.0 (1 constraints: 3f054d3b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.75.0 (2 constraints: 6b1aa94a)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.76.0 (2 constraints: 6c1ae34a)
 
-com.palantir.gradle.plugintesting:plugin-testing-core:0.75.0 (2 constraints: 181f5f8e)
+com.palantir.gradle.plugintesting:plugin-testing-core:0.76.0 (2 constraints: 1a1fac8e)
 
 com.palantir.gradle.utils:project-dependency-utils:0.29.0 (1 constraints: ef1b1a62)
 
@@ -264,8 +264,6 @@ org.apiguardian:apiguardian-api:1.1.2 (7 constraints: cc761de9)
 
 org.assertj:assertj-core:3.27.7 (3 constraints: a62c6955)
 
-org.codehaus.groovy:groovy:3.0.24 (1 constraints: 9c18228f)
-
 org.hamcrest:hamcrest:3.0 (2 constraints: 41185176)
 
 org.hamcrest:hamcrest-core:3.0 (2 constraints: 720acabf)
@@ -292,7 +290,7 @@ org.objenesis:objenesis:2.4 (1 constraints: ea0c8c0a)
 
 org.opentest4j:opentest4j:1.3.0 (2 constraints: cf209249)
 
-org.spockframework:spock-core:2.4-groovy-4.0 (3 constraints: f0344df9)
+org.spockframework:spock-core:2.4-groovy-4.0 (2 constraints: 561900d9)
 
 org.spockframework:spock-junit4:2.4-groovy-4.0 (1 constraints: 3c08e476)
 
