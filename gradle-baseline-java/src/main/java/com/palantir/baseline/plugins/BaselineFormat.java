@@ -190,8 +190,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
             project.getExtensions()
                     .getByType(JavaPluginExtension.class)
                     .getSourceSets()
-                    .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava().filter(file -> !file.toString()
-                            .contains(GENERATED_MARKER))));
+                    .all(sourceSet -> allJavaFiles.from(sourceSet
+                            .getAllJava()
+                            .filter(file -> !file.toString().contains(GENERATED_MARKER))));
 
             java.target(allJavaFiles);
             if (!project.getPluginManager().hasPlugin(PJF_PLUGIN)) {
