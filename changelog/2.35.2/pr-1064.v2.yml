@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Allow declaring that conversion to palantir-java-format has been started,
-    which ensures that conflicting checkstyle rules are removed.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1064

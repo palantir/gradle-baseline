@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: '[Safe-logging] Get safety from type parameter arguments'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3147

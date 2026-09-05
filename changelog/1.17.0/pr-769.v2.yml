@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Publish scm information within POM
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/769

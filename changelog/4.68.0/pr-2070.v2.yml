@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: '`StrictUnusedVariable` no longer flags parameters of default methods.'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2070

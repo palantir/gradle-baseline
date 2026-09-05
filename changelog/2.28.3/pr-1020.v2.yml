@@ -1,8 +1,0 @@
-type: fix
-fix:
-  description: |-
-    Fix error-prone mathcing literal null as a subtype.
-    The most common issue this fixes is failures on `SafeArg.of("name", null)`
-    assuming that the null literal value parameter may be a throwable.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1020

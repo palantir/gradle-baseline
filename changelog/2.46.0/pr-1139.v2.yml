@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Migrate the CollectionStreamForEach refactor to error-prone
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1139

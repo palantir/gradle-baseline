@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: AssertJ Refaster fixes use static `assertThat` imports
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/887

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Refaster assertj migrations support descriptions with format args
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/926

@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: support spotless 6.22.0 in baseline
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3140

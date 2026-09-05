@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Ensure that format tasks execute after compilation
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/688

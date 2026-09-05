@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Allow projects to override library auto-detection
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2011

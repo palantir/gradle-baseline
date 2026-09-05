@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Refaster rule to remove unnecessary supplier creation
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1059

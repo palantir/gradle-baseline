@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: RedundantMethodReference check to avoid unnecessary method references
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1069

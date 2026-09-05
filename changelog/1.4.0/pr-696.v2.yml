@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: No longer cache javaCompile tasks when applying errorprone or refaster
-    checks.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/696

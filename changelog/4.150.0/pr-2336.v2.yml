@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Fix the `BaselineModuleJvmArgs` plugin to once again work as intended
-    in multi-project builds
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2336

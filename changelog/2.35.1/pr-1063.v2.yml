@@ -1,8 +1,0 @@
-type: fix
-fix:
-  description: |-
-    Revert "Refaster rule to remove unnecessary supplier creation (#1059)"
-    The refaster rule breaks the common pattern:
-    `Suppliers.memoize(supplier::get)`.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1063

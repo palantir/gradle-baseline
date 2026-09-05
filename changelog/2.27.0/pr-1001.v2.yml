@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Slf4jLogsafeArgs fixes safe-log wrapped throwables
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1001

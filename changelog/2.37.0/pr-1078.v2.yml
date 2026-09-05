@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: refaster will automatically fix up assertions between primitives (a
-    == b) to provide better error messages
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1078

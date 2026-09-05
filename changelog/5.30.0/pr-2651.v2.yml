@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Upgrade error-prone to the latest release
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2651

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Suppress existing `ProxyNonConstantType` failures to ease rollout
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1850

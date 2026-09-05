@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: Baseline no longer provides a `SwitchStatementDefaultCase` error-prone
-    check.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1309

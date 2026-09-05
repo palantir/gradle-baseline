@@ -1,7 +1,0 @@
-type: fix
-fix:
-  description: Certain error-prone checks are disabled in test code, and the presence
-    of JUnit5's `@TestTemplate` annotation is now used to detect whether a class is
-    test code.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/892

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Feature/avoid hashmapint
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1773

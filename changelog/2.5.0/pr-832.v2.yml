@@ -1,9 +1,0 @@
-type: improvement
-improvement:
-  description: Error Prone StringBuilderConstantParameters. StringBuilder with a constant
-    number of parameters should be replaced by simple concatenation. The Java compiler
-    (jdk8) replaces concatenation of a constant number of arguments with a StringBuilder,
-    while jdk 9+ take advantage of JEP 280 (https://openjdk.java.net/jeps/280) to
-    efficiently pre-size the result for better performance than a StringBuilder.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/832

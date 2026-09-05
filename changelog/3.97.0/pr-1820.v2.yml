@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Enable ConsistentOverrides by default
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1820

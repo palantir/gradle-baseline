@@ -1,7 +1,0 @@
-type: improvement
-improvement:
-  description: 'baseline-java-versions: Provide an `explainJavaVersions` task that
-    makes it easier to work out which `target` and `runtime` java versions have been
-    chosen by the plugin and why.'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3079

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Extend check to convert flatMap(Streams::stream) to Stream.mapMulti(Optional::isPresent)
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3096

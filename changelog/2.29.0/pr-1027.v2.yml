@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: Error Prone `StrictCollectionIncompatibleType` to guard collection
-    usage
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1027

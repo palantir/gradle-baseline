@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: StringBuilderConstantParameters suggested fix doesn't remove comments
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/877

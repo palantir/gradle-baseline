@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: PreferAssertj supports migration of zero-delta floating point array
-    asserts
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/883

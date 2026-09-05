@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Compilation uses 'opens' values as 'exports'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2167

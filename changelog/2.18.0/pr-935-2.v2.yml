@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Refaster rules to simplify negated boolean expressions and extract null checks.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/935

@@ -1,5 +1,0 @@
-type: feature
-feature:
-  description: Add error-prone check JooqBatchWithoutBindArgs
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2506

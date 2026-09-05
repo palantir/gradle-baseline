@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Disable `PreconditionsConstantMessage` on gradle plugins
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/790

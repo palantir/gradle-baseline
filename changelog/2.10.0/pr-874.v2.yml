@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: PreferAssertj check avoids ambiguity in assertThat invocations
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/874

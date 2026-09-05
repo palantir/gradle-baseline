@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: ClassUniquenessPlugin now checks the `runtimeClasspath` configuration
-    by default.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/810

@@ -1,6 +1,0 @@
-type: feature
-feature:
-  description: Users can opt-in to format their files using our fork of google-java-format
-    (palantir-java-format)
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/936

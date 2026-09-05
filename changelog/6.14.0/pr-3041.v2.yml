@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Handle safety analysis for `this` and `super` references
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3041

@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: checkstyle Indentation rule is disabled when palantir-java-format is
-    enabled
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/987

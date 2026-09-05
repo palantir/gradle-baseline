@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Automatically fix  `UnusedException`
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3186

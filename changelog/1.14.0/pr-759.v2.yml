@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Implement `OptionalOrElseThrowThrows` to prevent throwing from orElseThrow
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/759

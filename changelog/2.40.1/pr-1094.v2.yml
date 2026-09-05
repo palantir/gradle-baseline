@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: The `PreferJavaTimeOverload` error-prone check is turned off as it
-    produces noisy false positives relating to custom AssertJ utilities.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1094

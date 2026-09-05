@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Move Slf4jLogsafeArgs to ERROR level
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3092

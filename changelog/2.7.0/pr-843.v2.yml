@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: ErrorProne will now detect dangerous usage of `@RunWith(Suite.class)`
-    that references JUnit5 classes, as this can cause tests to silently not run!
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/843

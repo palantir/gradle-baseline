@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: StrictUnusedVariable can only be suppressed with `_` prefix
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/854

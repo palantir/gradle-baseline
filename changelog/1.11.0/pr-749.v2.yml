@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Apply `InputStreamSlowMultibyteRead` error prone check at ERROR severity
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/749

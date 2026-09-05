@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: Add a refaster rule to migrate InvocationTargetException.getTargetException
-    to getCause.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1039

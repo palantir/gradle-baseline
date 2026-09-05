@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Update `ImmutablesStyleCollision` check to require meta-annotations with source retention.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1727

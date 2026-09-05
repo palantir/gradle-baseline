@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: checkJUnitDependencies detects a possible misconfiguration with spock
-    and JUnit5 which could lead to tests silently not running.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/951

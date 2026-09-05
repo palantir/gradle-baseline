@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: Error prone RedundantModifier check supports interface static methods
-    and fields.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1021

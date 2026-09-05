@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: When removing unused variables, `StrictUnusedVariable` will preserve
-    side effects
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/870

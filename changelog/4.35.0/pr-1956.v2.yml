@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Support `--add-opens` in addition to `--add-exports`
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1956

@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Fix `LoggerEnclosingClass` edge cases for type parameters and anonymous
-    classes
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1171

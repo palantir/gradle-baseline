@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Fix gradle 7 compat for checkClassUniquenessTask
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3090

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Checkstyle now tolerates empty lambda bodies (e.g. `() -> {}`
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/715

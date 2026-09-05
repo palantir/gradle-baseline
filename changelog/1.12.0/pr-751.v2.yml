@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Apply the suggested fixes for `UnusedMethod` and `UnusedVariable`.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/751

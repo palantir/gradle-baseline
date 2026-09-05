@@ -1,6 +1,0 @@
-type: feature
-feature:
-  description: baseline-reproducibility validates that sourceCompatibility is set
-    explicitly
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1574

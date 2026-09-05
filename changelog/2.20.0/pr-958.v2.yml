@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Improve TestCheckUtils.isTestCode test detection
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/958

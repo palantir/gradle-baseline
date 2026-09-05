@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Do not run error prone on any code in the build directory
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/853

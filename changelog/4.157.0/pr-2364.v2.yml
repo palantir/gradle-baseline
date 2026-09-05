@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Make task initialization lazier in the `junit-reports` plugin.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2364

@@ -1,7 +1,0 @@
-type: improvement
-improvement:
-  description: '`BaselineTesting` now configures tests to run using JUnit Platform
-    by default. Tests are configured using the test suites API, which ensures that
-    test framework dependencies are added automatically.'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3053

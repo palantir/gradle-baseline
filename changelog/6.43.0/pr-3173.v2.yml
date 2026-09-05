@@ -1,6 +1,0 @@
-type: feature
-feature:
-  description: Add `PreferUncheckedIoException` check to prefer `UncheckedIOException`
-    or `SafeUncheckedIoException` when wrapping `IOExcepetion`.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3173

@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Correctly handle `EnableRuleMigrationSupport` in `JUnit5RuleUsage`
-    errorprone-rule
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/725

@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Fix RedundantModifier failures types nested in interfaces
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1017

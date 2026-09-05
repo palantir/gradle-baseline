@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: A new `checkJUnitDependencies` task detects misconfigured JUnit dependencies
-    which could result in some tests silently not running.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/837

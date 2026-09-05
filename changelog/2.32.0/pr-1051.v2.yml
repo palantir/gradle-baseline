@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Checkstyle no longer complains about single-line javadoc produced by
-    palantir-java-format.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1051
