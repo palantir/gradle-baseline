@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: '[Safe-logging] Verify member reference type parameters when cast to
-    functional interface'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3052

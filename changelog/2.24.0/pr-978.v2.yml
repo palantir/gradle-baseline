@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: 'ReadReturnValueIgnored: Check that read operation results are not
-    ignored'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/978

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Refaster `stream.sorted().findFirst()` into `stream.min(Comparator.naturalOrder())`
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/752

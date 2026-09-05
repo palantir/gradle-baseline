@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: ImplicitPublicBuilderConstructor error prone rule
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1492

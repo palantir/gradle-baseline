@@ -1,7 +1,0 @@
-type: improvement
-improvement:
-  description: >
-    Baseline can now re-format all your Java files using the Eclipse formatter.
-    This is currently an opt-in preview, try it out by running `./gradlew format -Pcom.palantir.baseline-format.eclipse`.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/707

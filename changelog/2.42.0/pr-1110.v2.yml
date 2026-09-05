@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Migrate baseline error-prone checks to use jdk13 compatible qualifiers
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1110

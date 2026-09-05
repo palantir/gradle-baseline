@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Avoid configuring many gradle tasks
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2290

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: '[Safe-logging] Infer lambda parameter safety from surrounding context'
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3050

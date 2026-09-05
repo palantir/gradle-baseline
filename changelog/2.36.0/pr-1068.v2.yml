@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Replace refaster `StreamEmpty` with error prone `StreamOfEmpty` to
-    allow refactors to retain type arguments.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1068

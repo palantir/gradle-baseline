@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: IntelliJ GitHub issue navigation
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/729

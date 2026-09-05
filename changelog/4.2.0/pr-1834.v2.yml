@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Support the new SafeLogger API
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1834

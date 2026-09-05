@@ -1,7 +1,0 @@
-type: improvement
-improvement:
-  description: Adds an ErrorProne rule, `JooqResultStreamLeak`, which ensures that
-    result streams and cursors returned from jOOQ results are closed in a try-with-resources
-    block.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1055

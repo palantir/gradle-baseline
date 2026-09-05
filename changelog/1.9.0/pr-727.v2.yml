@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: "Allow suppression of the TODO checkstyle check by giving it an ID. Clarify its comment to allow // TODO(username): ..."
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/727

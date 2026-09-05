@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: Warn when using records with array fields as their equality behavior
-    is surprising
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2672

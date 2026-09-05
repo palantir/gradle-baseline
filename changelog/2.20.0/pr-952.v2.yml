@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Fix error-prone `UnnecessaryParentheses` by default
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/952

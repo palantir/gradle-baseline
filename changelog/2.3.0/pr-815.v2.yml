@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: SafeLoggingExceptionMessageFormat disallows `{}` in safelog exception
-    messages
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/815

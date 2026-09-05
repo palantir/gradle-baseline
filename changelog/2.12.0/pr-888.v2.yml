@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Disable `UnusedVariable` error prone rule by default
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/888

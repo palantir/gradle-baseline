@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Determine whether to use junitPlatform on a per source set basis
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/701

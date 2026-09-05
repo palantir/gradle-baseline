@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Errorprone rules for usage of Guava static factory methods
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/941

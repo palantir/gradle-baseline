@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Add a message for the IllegalType checkstyle check
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3182

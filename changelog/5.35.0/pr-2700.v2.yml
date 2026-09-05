@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Safety propagation traverses complex record components
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2700

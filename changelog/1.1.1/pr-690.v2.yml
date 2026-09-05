@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Auto-fix OptionalOrElseMethodInvocation using `-PerrorProneApply`.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/690

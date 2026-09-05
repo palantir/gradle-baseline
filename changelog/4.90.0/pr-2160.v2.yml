@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Validate annotated variable and field assignment safety
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2160

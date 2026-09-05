@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Check unused dependencies task can be up to date
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1426

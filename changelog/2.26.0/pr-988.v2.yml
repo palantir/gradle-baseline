@@ -1,7 +1,0 @@
-type: improvement
-improvement:
-  description: >
-    Run `./gradlew formatDiff` to reformat the relevant sections of any uncommitted changed Java files
-    (relies on `git diff -U0 HEAD` under the hood)
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/988

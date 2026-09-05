@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Fix switch expression handling
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2157

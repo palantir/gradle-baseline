@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Revert to version `6.6.0` of spotless to prevent Not allowed to resolve
-    configuration ':palantirJavaFormat`
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3129

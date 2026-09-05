@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Upgrade ProxyNonConstantType to WARNING (from suggestion)
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1816

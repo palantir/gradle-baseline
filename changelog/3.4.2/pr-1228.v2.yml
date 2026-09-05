@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Copyright header enforcement now includes any leading and trailing
-    whitespace on lines
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1228

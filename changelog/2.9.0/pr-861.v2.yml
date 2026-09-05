@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: The PreferAssertj refactoring will only be applied if you have explicitly
-    opted in (e.g. using `baselineErrorProne { patchChecks += 'PreferAssertj' }`
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/861

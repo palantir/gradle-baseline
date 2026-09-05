@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Refaster out String.format from describedAs
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/927

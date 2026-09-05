@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Support safety passthrough on several streamlike methods
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2174

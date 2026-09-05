@@ -1,8 +1,0 @@
-type: fix
-fix:
-  description: |-
-    Fixes incorrect logging and restores correct handling of `--add-exports` and `--add-opens` in `BaselineModuleJvmArgs`
-
-    This change defers evaluation of the `classpath` to execution time, ensuring all relevant jars are included and their manifest entries are respected.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3131

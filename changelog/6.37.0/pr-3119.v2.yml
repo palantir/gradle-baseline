@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Make `gradle-baseline` configuration cache compatible for the `classes` task.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3119

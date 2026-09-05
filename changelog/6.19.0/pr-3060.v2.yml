@@ -1,7 +1,0 @@
-type: fix
-fix:
-  description: For baseline-java-versions (for Gradle >=8), do not explicitly set
-    the `sourceCompatibility` of Java compilations in a task action before the task
-    runs.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3060

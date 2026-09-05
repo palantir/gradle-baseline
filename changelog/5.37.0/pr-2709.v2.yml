@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Prevent Unnecessary Propagation When Using Array Containers
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2709

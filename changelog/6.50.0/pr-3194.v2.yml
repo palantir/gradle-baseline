@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Ensure `CheckUnusedDependencies` works on non-GCV locked projects
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3194

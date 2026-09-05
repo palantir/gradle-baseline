@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: migrate to `idea-configuration` for external deps configuration
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3109

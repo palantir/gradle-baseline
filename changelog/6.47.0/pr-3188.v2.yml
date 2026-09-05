@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Disable `InsecureCryptoUsage` instead of `InsecureCipherMode`
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/3188

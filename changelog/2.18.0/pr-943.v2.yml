@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: ExecutorSubmitRunnableFutureIgnored as error prone ERROR
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/943

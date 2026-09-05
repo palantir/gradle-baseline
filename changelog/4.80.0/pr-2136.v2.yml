@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Compilation supports add-exports/add-opens with toolchains
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2136

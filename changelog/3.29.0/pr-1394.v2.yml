@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: The `Slf4jLogsafeArgs` ErrorProne rule now allows object arrays be passed as vararg
-    argument to logging methods.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1394

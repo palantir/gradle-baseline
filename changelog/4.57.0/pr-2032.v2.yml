@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Ban AfterburnerModule to reduce JDK-17 risk
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2032

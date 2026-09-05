@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Add Refaster rule to convert Stream.of() -> Stream.empty()
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1061

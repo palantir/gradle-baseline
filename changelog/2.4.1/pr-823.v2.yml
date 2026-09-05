@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Avoid false positives caused by `module-info.class` when checking class
-    uniqueness
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/823

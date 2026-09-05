@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: refaster replacement for assertj hasSize(foo.size) -> hasSameSizeAs
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/900

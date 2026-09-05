@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Error prone validation that Stream.sort is invoked on comparable streams
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/753

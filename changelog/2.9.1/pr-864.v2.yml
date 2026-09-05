@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Error prone will correctly ignore all source files in the build directory and in any generated source directory
-  links:
-    - https://github.com/palantir/gradle-baseline/pull/864

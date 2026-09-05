@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Internal `ImmutablesStyle` annotations are now excluded from Intellij auto-imports and completion.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1668

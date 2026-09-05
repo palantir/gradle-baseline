@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: Introduce `BadAssert` to ban `assert` statements in favor of better
-    alternatives.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1810

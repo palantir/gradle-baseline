@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: StrictUnusedVariable is now an error by default
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/855

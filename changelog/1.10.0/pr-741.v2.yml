@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Refaster to use `execute` over `submit` when the result is ignored
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/741

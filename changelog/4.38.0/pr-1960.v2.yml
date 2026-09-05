@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Improve Zero Warmup Rate Limiter to Catch Int Literals
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1960

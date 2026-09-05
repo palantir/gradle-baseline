@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Add refaster rule to simplify empty optional asserts
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/911

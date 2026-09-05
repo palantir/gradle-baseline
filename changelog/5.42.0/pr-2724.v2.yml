@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Integrates with gradle-failure-reports. Adds ExceptionWithSuggestion.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2724

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Document ThrowSpecificity and CatchSpecificity edge cases
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1118

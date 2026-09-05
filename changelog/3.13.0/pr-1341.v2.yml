@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Intellij is now configured to import inner classes.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1341

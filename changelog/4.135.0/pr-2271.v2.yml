@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Safety analysis detects annotations on superclasses and their interfaces
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2271

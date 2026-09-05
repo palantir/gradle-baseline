@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: BaselineExactDependencies applies to all source sets
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1262

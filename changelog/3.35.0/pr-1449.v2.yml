@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Fix typo in TooManyArguments check
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1449

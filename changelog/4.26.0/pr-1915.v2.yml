@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: CheckExplicitSourceCompatibilityTask accepts toolchains as a mechanism
-    to specify a release version
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1915

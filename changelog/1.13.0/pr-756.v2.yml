@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Disable errorprone `Slf4jLogsafeArgs` in test code
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/756

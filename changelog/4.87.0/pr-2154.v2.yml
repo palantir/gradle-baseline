@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Array assignment merges safety rather than replacing it
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2154

@@ -1,6 +1,0 @@
-type: improvement
-improvement:
-  description: |-
-    Spotless check for disallowing dangling parenthesis.
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/687

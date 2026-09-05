@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Gradle plugins don't enforce PublicConstructorForAbstractClass which
-    can break gradle injection
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2009

@@ -1,5 +1,0 @@
-type: feature
-feature:
-  description: Zero Warmup Guava RateLimiter
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/1950

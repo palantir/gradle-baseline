@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Gradle JDK automanagement integration for toolchains
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2783

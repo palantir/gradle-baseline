@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: LogSafePreconditionsMessageFormat disallows slf4j-style format characters
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/761

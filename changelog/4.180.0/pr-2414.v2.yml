@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: exempt @link javadoc comment from LineLength check
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/2414
