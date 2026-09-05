@@ -36,8 +36,9 @@ public final class BaselineJavaCompilerDiagnostics implements Plugin<Project> {
 
     @Override
     public void apply(Project proj) {
-        proj.afterEvaluate(
-                project -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
+        proj.afterEvaluate(project -> project.getTasks()
+                .withType(JavaCompile.class)
+                .configureEach(javaCompileTask -> {
                     List<String> compilerArgs = javaCompileTask.getOptions().getCompilerArgs();
                     // Avoid overriding options that have already been set
                     if (!compilerArgs.contains(MAX_WARNINGS_ARG)) {
