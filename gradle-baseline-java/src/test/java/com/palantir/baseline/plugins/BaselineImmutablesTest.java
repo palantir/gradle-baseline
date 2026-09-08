@@ -21,7 +21,6 @@ import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.a
 import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
-import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.util.List;
@@ -33,7 +32,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 @GradlePluginTests
 @WithJdkAutomanagement
-@DisabledConfigurationCache
 class BaselineImmutablesTest {
     private static final String IMMUTABLES = "org.immutables:value:2.8.8";
     private static final String IMMUTABLES_ANNOTATIONS = IMMUTABLES + ":annotations";
