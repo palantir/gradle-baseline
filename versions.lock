@@ -136,7 +136,7 @@ org.apache.maven.resolver:maven-resolver-spi:1.9.7 (3 constraints: 6e306f6a)
 
 org.apache.maven.resolver:maven-resolver-util:1.9.7 (3 constraints: 6e306f6a)
 
-org.apache.maven.shared:maven-dependency-analyzer:1.17.1 (1 constraints: 3c053f3b)
+org.apache.maven.shared:maven-dependency-analyzer:1.17.2 (1 constraints: 3d05403b)
 
 org.apache.maven.shared:maven-shared-utils:3.3.4 (1 constraints: e60b61f3)
 
@@ -178,7 +178,7 @@ org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 (2 constraints: 8118c1c5)
 
 org.jspecify:jspecify:1.0.1 (10 constraints: 029ecdaa)
 
-org.ow2.asm:asm:9.10.1 (4 constraints: 15463428)
+org.ow2.asm:asm:9.10.1 (4 constraints: 3d465a6e)
 
 org.slf4j:slf4j-api:2.0.17 (7 constraints: 037194c3)
 
