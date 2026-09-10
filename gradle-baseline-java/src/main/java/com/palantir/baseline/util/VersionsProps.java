@@ -67,7 +67,6 @@ public final class VersionsProps {
         class Builder extends VersionsProps_VersionForce_Builder {}
     }
 
-    @SuppressWarnings("for-rollout:FormatStringShouldUsePlaceholders")
     public static ParsedVersionsProps readVersionsProps(File propsFile) {
         Preconditions.checkArgument(propsFile.exists(), "No " + propsFile.toPath() + " file found");
         try (Stream<String> lines = Files.lines(propsFile.toPath())) {
