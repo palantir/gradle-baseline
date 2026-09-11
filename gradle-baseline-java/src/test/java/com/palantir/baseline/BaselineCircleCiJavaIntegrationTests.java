@@ -26,18 +26,17 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class BaselineCircleCiJavaIntegrationTests {
-    @Rule
-    public final TemporaryFolder projectDir = new TemporaryFolder();
+    @TempDir
+    public File projectDir;
 
     private File reportsDir;
 
-    @Before
+    @BeforeEach
     public void before() throws IOException {
         reportsDir = new File(projectDir.getRoot(), "circle/reports");
 
