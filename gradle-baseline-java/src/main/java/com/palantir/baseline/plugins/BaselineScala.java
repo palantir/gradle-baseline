@@ -35,19 +35,25 @@ public final class BaselineScala extends AbstractBaselinePlugin {
         this.project = project;
         project.getPluginManager().withPlugin("scala", plugin -> {
             JavaPluginExtension javaConvention = project.getExtensions().getByType(JavaPluginExtension.class);
-            project.getTasks().withType(ScalaCompile.class).configureEach(scalaCompile -> scalaCompile
-                    .getScalaCompileOptions()
-                    .setAdditionalParameters(ImmutableList.of("-target:" + SCALA_TARGET_VERSION)));
-            project.getRootProject().getPluginManager().withPlugin("idea", ideaPlugin -> project.getRootProject()
-                    .getExtensions()
-                    .configure(
-                            IdeaModel.class,
-                            ideaModel -> configureIdeaPlugin(
-                                    ideaModel,
-                                    javaConvention
-                                            .getSourceSets()
-                                            .named(SourceSet.MAIN_SOURCE_SET_NAME)
-                                            .get())));
+            project.getTasks()
+                    .withType(ScalaCompile.class)
+                    .configureEach(scalaCompile -> scalaCompile
+                            .getScalaCompileOptions()
+                            .setAdditionalParameters(ImmutableList.of("-target:" + SCALA_TARGET_VERSION)));
+            project.getRootProject()
+                    .getPluginManager()
+                    .withPlugin(
+                            "idea",
+                            ideaPlugin -> project.getRootProject()
+                                    .getExtensions()
+                                    .configure(
+                                            IdeaModel.class,
+                                            ideaModel -> configureIdeaPlugin(
+                                                    ideaModel,
+                                                    javaConvention
+                                                            .getSourceSets()
+                                                            .named(SourceSet.MAIN_SOURCE_SET_NAME)
+                                                            .get())));
         });
     }
 
