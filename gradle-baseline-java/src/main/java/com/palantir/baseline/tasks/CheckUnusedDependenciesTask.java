@@ -16,9 +16,13 @@
 
 package com.palantir.baseline.tasks;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -39,17 +43,21 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
 public abstract class CheckUnusedDependenciesTask extends DefaultTask {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     @Input
     public abstract SetProperty<String> getIgnored();
@@ -65,6 +73,9 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
 
     @Inject
     protected abstract ObjectFactory getObjectFactory();
+
+    @OutputFile
+    public abstract RegularFileProperty getReport();
 
     private final Usage consistentVersionsUsage;
 
@@ -117,14 +128,22 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
                 .sorted(Comparator.comparing(BaselineExactDependencies::asString))
                 .toList();
         if (!unusedArtifacts.isEmpty()) {
+            UnusedDependencyReport report = new UnusedDependencyReport(unusedArtifacts.stream()
+                    .map(BaselineExactDependencies::asDependencyStringWithName)
+                    .toList());
+
+            try {
+                MAPPER.writeValue(getReport().getAsFile().get(), report);
+            } catch (IOException e) {
+                getLogger().warn("failed to write unused dependencies report", e);
+            }
+
             // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
             StringBuilder builder = new StringBuilder();
             builder.append(String.format(
                     "Found %s dependencies unused during compilation, please delete them from '%s':",
                     unusedArtifacts.size(), buildFile()));
-            for (ResolvedArtifact resolvedArtifact : unusedArtifacts) {
-                builder.append("\n\t").append(BaselineExactDependencies.asDependencyStringWithName(resolvedArtifact));
-            }
+            report.unusedDependencies().forEach(dep -> builder.append("\n\t").append(dep));
             throw new ExceptionWithSuggestion(builder.toString(), buildFile().toString());
         }
     }
@@ -199,4 +218,7 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
                     id.getGroup(), id.getName(), resolvedArtifact.getClassifier(), resolvedArtifact.getExtension());
         }
     }
+
+    private record UnusedDependencyReport(
+            @JsonProperty("unusedDependencies") List<String> unusedDependencies) {}
 }
