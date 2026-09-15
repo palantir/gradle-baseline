@@ -17,6 +17,7 @@
 package com.palantir.baseline;
 
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
@@ -102,6 +103,56 @@ public class BaselineExactDependenciesTest {
         assertThat(result).task(":classes").succeeded();
         assertThat(result).task(":checkUnusedDependenciesMain").failed();
         assertThat(result).output().contains("Found 1 dependencies unused during compilation");
+        assertThat(rootProject.file("build.gradle").text())
+                .contains("implementation 'com.google.guava:guava:27.0.1-jre'");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"checkUnusedDependencies", "checkUnusedDependenciesMain"})
+    public void fix_removes_matching_declarations_only(String task, GradleInvoker gradle, RootProject rootProject) {
+        rootProject.buildGradle().append("""
+            repositories { mavenCentral() }
+            dependencies {
+                implementation 'org.freemarker:freemarker'
+                implementation "org.freemarker:freemarker:2.3.34" // unused
+                implementation 'com.google.guava:guava:27.0.1-jre'
+                testImplementation 'org.freemarker:freemarker:2.3.34'
+                runtimeOnly 'org.freemarker:freemarker:2.3.34'
+            }
+            checkUnusedDependencies { ignore 'com.google.guava', 'guava' }
+            """);
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
+        rootProject.testSourceSet().java().writeClass("""
+            package pkg;
+            class FooTest { freemarker.template.Configuration configuration; }
+            """);
+
+        gradle.withArgs(task, "--fix").buildsSuccessfully();
+
+        assertThat(rootProject.file("build.gradle").text())
+                .doesNotContain("implementation 'org.freemarker:freemarker'", "implementation \"org.freemarker:")
+                .contains(
+                        "implementation 'com.google.guava:guava:27.0.1-jre'",
+                        "testImplementation 'org.freemarker:freemarker:2.3.34'",
+                        "runtimeOnly 'org.freemarker:freemarker:2.3.34'");
+        gradle.withArgs("checkUnusedDependencies").buildsSuccessfully();
+    }
+
+    @Test
+    public void fix_still_fails_for_unmatched_declarations(GradleInvoker gradle, RootProject rootProject) {
+        rootProject.buildGradle().append("""
+            repositories { mavenCentral() }
+            def guava = 'com.google.guava:guava:27.0.1-jre'
+            dependencies { implementation guava }
+            """);
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
+        String original = rootProject.file("build.gradle").text();
+
+        InvocationResult result =
+                gradle.withArgs("checkUnusedDependencies", "--fix").buildsWithFailure();
+
+        assertThat(result).output().contains("Found 1 dependencies unused during compilation");
+        assertThat(rootProject.file("build.gradle").text()).isEqualTo(original);
     }
 
     @Test

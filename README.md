@@ -209,6 +209,7 @@ _Complete byte-for-byte reproducibility is desirable because it enables the [Gra
 This plugin adds two tasks to help users ensure they explicitly declare exactly the dependencies they need - nothing more and nothing less:
 
 - `checkUnusedDependencies` - fails if a project pulls in a jar but never compiles against classes from it.  This is undesirable because it inflates published jars and distributions.
+  Pass `--fix` to remove matching single-line Groovy declarations such as `implementation 'group:artifact'` or `implementation 'group:artifact:version'`. Unmatched dependencies still fail the check. The option also works on source-set tasks such as `checkUnusedDependenciesMain`.
 - `checkImplicitDependencies` - fails if source code relies on classes that only appear on the classpath transitively.  This is fragile because without a direct dependency on the relevant jar, a seemingly unrelated dependency upgrade could cause compilation to start failing.
 
 Both of these tasks can be configured to ignore specific dependencies if this improves the signal-to-noise ratio. The following snippet illustrates the defaults that are baked into the plugin:

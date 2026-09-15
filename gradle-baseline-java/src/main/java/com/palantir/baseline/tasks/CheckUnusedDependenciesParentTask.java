@@ -20,9 +20,11 @@ import com.palantir.baseline.plugins.BaselineExactDependencies;
 import java.util.Collections;
 import java.util.Set;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.options.Option;
 
 public abstract class CheckUnusedDependenciesParentTask extends DefaultTask {
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
@@ -31,7 +33,12 @@ public abstract class CheckUnusedDependenciesParentTask extends DefaultTask {
     public CheckUnusedDependenciesParentTask() {
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
+        getFix().convention(false);
     }
+
+    @Internal
+    @Option(option = "fix", description = "Remove unused dependency declarations from build.gradle")
+    public abstract Property<Boolean> getFix();
 
     /** Ignores these coordinates for all source sets. */
     public final void ignore(Provider<Set<String>> value) {

@@ -94,6 +94,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                                     .setFrom(sourceSet.getOutput().getClassesDirs());
                             task.getDependenciesConfigurations().add(compileClasspath);
                             task.withDeclaredDependenciesFrom(implementation);
+                            task.getFix()
+                                    .convention(
+                                            checkUnusedDependencies.flatMap(CheckUnusedDependenciesParentTask::getFix));
 
                             // ignore intra-project dependencies, which are typically added automatically for things
                             // like test fixtures
