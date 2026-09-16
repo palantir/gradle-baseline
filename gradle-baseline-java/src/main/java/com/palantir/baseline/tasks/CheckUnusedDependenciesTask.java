@@ -174,7 +174,17 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
                 remainingArtifacts.add(artifact);
                 continue;
             }
-            updatedContents = matcher.replaceAll("");
+            if (matcher.find()) {
+                getLogger()
+                        .warn(
+                                "Cannot remove unused dependency {} from {} because it has multiple matching "
+                                        + "declarations; please remove it manually",
+                                dependencyCoordinates,
+                                buildFile());
+                remainingArtifacts.add(artifact);
+                continue;
+            }
+            updatedContents = matcher.replaceFirst("");
             getLogger().lifecycle("Removed unused dependency {} from {}", dependencyCoordinates, buildFile());
         }
         if (!updatedContents.equals(originalContents)) {

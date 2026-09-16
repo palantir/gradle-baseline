@@ -113,7 +113,6 @@ public class BaselineExactDependenciesTest {
         rootProject.buildGradle().append("""
             repositories { mavenCentral() }
             dependencies {
-                implementation 'org.freemarker:freemarker'
                 implementation "org.freemarker:freemarker:2.3.34" // unused
                 implementation 'com.google.guava:guava:27.0.1-jre'
                 testImplementation 'org.freemarker:freemarker:2.3.34'
@@ -130,12 +129,41 @@ public class BaselineExactDependenciesTest {
         gradle.withArgs(task, "--fix").buildsSuccessfully();
 
         assertThat(rootProject.file("build.gradle").text())
-                .doesNotContain("implementation 'org.freemarker:freemarker'", "implementation \"org.freemarker:")
+                .doesNotContain("implementation \"org.freemarker:")
                 .contains(
                         "implementation 'com.google.guava:guava:27.0.1-jre'",
                         "testImplementation 'org.freemarker:freemarker:2.3.34'",
                         "runtimeOnly 'org.freemarker:freemarker:2.3.34'");
         gradle.withArgs("checkUnusedDependencies").buildsSuccessfully();
+    }
+
+    @Test
+    public void fix_skips_duplicate_declarations_and_removes_unique_dependencies(
+            GradleInvoker gradle, RootProject rootProject) {
+        rootProject.buildGradle().append("""
+            repositories { mavenCentral() }
+            dependencies {
+                implementation 'com.google.guava:guava'
+                implementation "com.google.guava:guava:27.0.1-jre" // duplicate
+                implementation 'org.freemarker:freemarker:2.3.34'
+            }
+            """);
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
+
+        InvocationResult result =
+                gradle.withArgs("checkUnusedDependencies", "--fix").buildsWithFailure();
+
+        assertThat(result)
+                .output()
+                .contains(
+                        "Cannot remove unused dependency com.google.guava:guava from build.gradle because it has "
+                                + "multiple matching declarations; please remove it manually",
+                        "Found 1 dependencies unused during compilation");
+        assertThat(rootProject.file("build.gradle").text())
+                .contains(
+                        "implementation 'com.google.guava:guava'",
+                        "implementation \"com.google.guava:guava:27.0.1-jre\" // duplicate")
+                .doesNotContain("implementation 'org.freemarker:freemarker:2.3.34'");
     }
 
     @Test
