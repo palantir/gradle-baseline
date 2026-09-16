@@ -28,8 +28,10 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -149,42 +151,44 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
 
     @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private List<ResolvedArtifact> removeUnusedDependencies(List<ResolvedArtifact> unusedArtifacts) throws IOException {
-        Path path = getProject().getBuildFile().toPath();
-        if (!path.toString().endsWith(".gradle") || !Files.isRegularFile(path)) {
+        Path buildFilePath = getProject().getBuildFile().toPath();
+        if (!buildFilePath.toString().endsWith(".gradle") || !Files.isRegularFile(buildFilePath)) {
             return unusedArtifacts;
         }
-        String original = Files.readString(path);
-        String updated = original;
-        String configurations = getDeclaredConfigurationNames().get().stream()
+        String originalContents = Files.readString(buildFilePath);
+        String updatedContents = originalContents;
+        String configurationPattern = getDeclaredConfigurationNames().get().stream()
                 .map(Pattern::quote)
                 .collect(Collectors.joining("|"));
-        List<ResolvedArtifact> remaining = new ArrayList<>();
+        List<ResolvedArtifact> remainingArtifacts = new ArrayList<>();
         for (ResolvedArtifact artifact : unusedArtifacts) {
-            if (artifact.getClassifier() != null
+            if (Optional.ofNullable(artifact.getClassifier()).isPresent()
                     || artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier) {
-                remaining.add(artifact);
+                remainingArtifacts.add(artifact);
                 continue;
             }
-            // Support only standalone Groovy string declarations, with an optional literal version and line comment.
-            Pattern declaration = Pattern.compile("(?m)^[\\t ]*(?:" + configurations + ")[\\t ]+(['\"])"
-                    + Pattern.quote(BaselineExactDependencies.asString(artifact))
-                    + "(?::[a-zA-Z0-9._+\\-]+)?\\1[\\t ]*;?[\\t ]*(?://[^\\r\\n]*)?(?:\\r?\\n|\\z)");
-            var matcher = declaration.matcher(updated);
-            if (matcher.find()) {
-                updated = matcher.replaceAll("");
-                getLogger()
-                        .lifecycle(
-                                "Removed unused dependency {} from {}",
-                                BaselineExactDependencies.asString(artifact),
-                                buildFile());
-            } else {
-                remaining.add(artifact);
+            String dependencyCoordinates = BaselineExactDependencies.asString(artifact);
+            Matcher matcher = dependencyDeclarationPattern(configurationPattern, dependencyCoordinates)
+                    .matcher(updatedContents);
+            if (!matcher.find()) {
+                remainingArtifacts.add(artifact);
+                continue;
             }
+            updatedContents = matcher.replaceAll("");
+            getLogger().lifecycle("Removed unused dependency {} from {}", dependencyCoordinates, buildFile());
         }
-        if (!updated.equals(original)) {
-            Files.writeString(path, updated);
+        if (!updatedContents.equals(originalContents)) {
+            Files.writeString(buildFilePath, updatedContents);
         }
-        return remaining;
+        return remainingArtifacts;
+    }
+
+    private static Pattern dependencyDeclarationPattern(String configurationPattern, String dependencyCoordinates) {
+        // Support only standalone Groovy string declarations, with an optional literal version and line comment.
+        // Example: implementation 'org.freemarker:freemarker:2.3.34' // unused
+        return Pattern.compile("(?m)^[\\t ]*(?:" + configurationPattern + ")[\\t ]+(['\"])"
+                + Pattern.quote(dependencyCoordinates)
+                + "(?::[a-zA-Z0-9._+\\-]+)?\\1[\\t ]*;?[\\t ]*(?://[^\\r\\n]*)?(?:\\r?\\n|\\z)");
     }
 
     @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
