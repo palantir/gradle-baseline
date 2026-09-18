@@ -196,7 +196,7 @@ com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
 com.netflix.nebula:nebula-test:12.1.0 (2 constraints: cb1d802c)
 
-com.palantir.gradle.consistentversions:gradle-consistent-versions:3.19.0 (1 constraints: 3f05503b)
+com.palantir.gradle.consistentversions:gradle-consistent-versions:3.20.0 (1 constraints: 3705393b)
 
 com.palantir.gradle.jdks:gradle-jdks:0.82.0 (2 constraints: 191a3d12)
 
