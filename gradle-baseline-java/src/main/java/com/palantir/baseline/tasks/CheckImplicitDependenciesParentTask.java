@@ -23,7 +23,9 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
+import org.gradle.work.DisableCachingByDefault;
 
+@DisableCachingByDefault(because = "Not opting into build caching; explicit opt-out is required by Gradle 9.7")
 public abstract class CheckImplicitDependenciesParentTask extends DefaultTask {
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final SetProperty<String> ignore;
