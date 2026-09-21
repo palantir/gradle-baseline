@@ -24,9 +24,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.maven.shared.dependency.analyzer.DependencyUsage;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -83,19 +84,37 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
                         BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
-        Set<List<ResolvedArtifact>> necessaryArtifacts = referencedClasses().stream()
-                .map(c -> BaselineExactDependencies.INDEXES.classToArtifacts(c).collect(Collectors.toList()))
-                .collect(Collectors.toSet());
+        List<ResolvedArtifact> usedButUndeclared = dependencyUsages()
+                .map(usage -> {
+                    List<ResolvedArtifact> artifacts = BaselineExactDependencies.INDEXES
+                            .classToArtifacts(usage.getDependencyClass())
+                            .collect(Collectors.toList());
 
-        List<ResolvedArtifact> usedButUndeclared = necessaryArtifacts.stream()
-                .filter(artifacts -> artifacts.stream().noneMatch(this::isArtifactFromCurrentProject))
-                .filter(artifacts -> artifacts.stream().noneMatch(this::shouldIgnore))
-                .filter(artifacts -> artifacts.stream().noneMatch(declaredArtifacts::contains))
-                // Select a single deterministic artifact for the suggestion
-                .map(artifacts -> artifacts.stream().min(ARTIFACT_COMPARATOR))
-                .<ResolvedArtifact>mapMulti(Optional::ifPresent)
+                    if (artifacts.stream().anyMatch(this::isArtifactFromCurrentProject)
+                            || artifacts.stream().anyMatch(this::shouldIgnore)
+                            || artifacts.stream().anyMatch(declaredArtifacts::contains)) {
+                        return null;
+                    }
+
+                    // Select a single deterministic artifact for the suggestion
+                    ResolvedArtifact artifact =
+                            artifacts.stream().min(ARTIFACT_COMPARATOR).orElse(null);
+                    if (artifact == null) {
+                        return null;
+                    }
+
+                    getLogger()
+                            .info(
+                                    "Found implicit dependency `{}` in `{}`.",
+                                    usage.getDependencyClass(),
+                                    usage.getUsedBy());
+
+                    return artifact;
+                })
+                .filter(Objects::nonNull)
                 .sorted(ARTIFACT_COMPARATOR)
-                .collect(Collectors.toList());
+                .toList();
+
         if (!usedButUndeclared.isEmpty()) {
             String suggestion = usedButUndeclared.stream()
                     .map(this::getSuggestionString)
@@ -142,10 +161,8 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     /** All classes which are mentioned in this project's source code. */
-    private Set<String> referencedClasses() {
-        return Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet());
+    private Stream<DependencyUsage> dependencyUsages() {
+        return Streams.stream(sourceClasses.get().iterator()).flatMap(BaselineExactDependencies::dependencyUsages);
     }
 
     @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
