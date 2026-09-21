@@ -16,6 +16,8 @@
 
 package com.palantir.baseline.tasks;
 
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
@@ -25,6 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.maven.shared.dependency.analyzer.DependencyUsage;
@@ -84,39 +87,32 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
                         BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
-        List<ResolvedArtifact> usedButUndeclared = dependencyUsages()
-                .map(usage -> {
-                    List<ResolvedArtifact> artifacts = BaselineExactDependencies.INDEXES
-                            .classToArtifacts(usage.getDependencyClass())
-                            .toList();
+        SetMultimap<List<ResolvedArtifact>, DependencyUsage> necessaryArtifacts = dependencyUsages()
+                .collect(ImmutableSetMultimap.toImmutableSetMultimap(
+                        usage -> BaselineExactDependencies.INDEXES
+                                .classToArtifacts(usage.getDependencyClass())
+                                .toList(),
+                        Function.identity()));
 
-                    if (artifacts.stream().anyMatch(this::isArtifactFromCurrentProject)
-                            || artifacts.stream().anyMatch(declaredArtifacts::contains)
-                            || artifacts.stream().anyMatch(this::shouldIgnore)) {
-                        return null;
-                    }
+        Set<List<ResolvedArtifact>> usedButUndeclared = necessaryArtifacts.keySet().stream()
+                .filter(artifacts -> !artifacts.isEmpty())
+                .filter(artifacts -> artifacts.stream().noneMatch(this::isArtifactFromCurrentProject))
+                .filter(artifacts -> artifacts.stream().noneMatch(this::shouldIgnore))
+                .filter(artifacts -> artifacts.stream().noneMatch(declaredArtifacts::contains))
+                .collect(Collectors.toUnmodifiableSet());
 
-                    // Select a single deterministic artifact for the suggestion
-                    ResolvedArtifact artifact =
-                            artifacts.stream().min(ARTIFACT_COMPARATOR).orElse(null);
-                    if (artifact == null) {
-                        return null;
-                    }
-
-                    getLogger()
-                            .info(
-                                    "Found implicit dependency `{}` in `{}`.",
-                                    usage.getDependencyClass(),
-                                    usage.getUsedBy());
-
-                    return artifact;
-                })
-                .filter(Objects::nonNull)
-                .sorted(ARTIFACT_COMPARATOR)
-                .toList();
+        usedButUndeclared.forEach(artifacts -> {
+            necessaryArtifacts.get(artifacts).forEach(usage -> {
+                getLogger()
+                        .info("Found implicit dependency `{}` in `{}`.", usage.getDependencyClass(), usage.getUsedBy());
+            });
+        });
 
         if (!usedButUndeclared.isEmpty()) {
             String suggestion = usedButUndeclared.stream()
+                    // Select a single deterministic artifact for the suggestion
+                    .map(artifacts ->
+                            artifacts.stream().min(ARTIFACT_COMPARATOR).orElseThrow())
                     .map(this::getSuggestionString)
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
