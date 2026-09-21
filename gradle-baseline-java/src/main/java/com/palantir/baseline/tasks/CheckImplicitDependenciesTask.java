@@ -88,11 +88,11 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
                 .map(usage -> {
                     List<ResolvedArtifact> artifacts = BaselineExactDependencies.INDEXES
                             .classToArtifacts(usage.getDependencyClass())
-                            .collect(Collectors.toList());
+                            .toList();
 
                     if (artifacts.stream().anyMatch(this::isArtifactFromCurrentProject)
-                            || artifacts.stream().anyMatch(this::shouldIgnore)
-                            || artifacts.stream().anyMatch(declaredArtifacts::contains)) {
+                            || artifacts.stream().anyMatch(declaredArtifacts::contains)
+                            || artifacts.stream().anyMatch(this::shouldIgnore)) {
                         return null;
                     }
 
@@ -130,34 +130,31 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     private String getSuggestionString(ResolvedArtifact artifact) {
-        String artifactNameString = isProjectArtifact(artifact)
-                ? String.format(
-                        "project('%s')",
-                        ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath())
-                : String.format(
-                        "'%s:%s'",
-                        artifact.getModuleVersion().getId().getGroup(),
-                        artifact.getModuleVersion().getId().getName());
+        String artifactNameString;
+        if (artifact.getId().getComponentIdentifier()
+                instanceof ProjectComponentIdentifier projectComponentIdentifier) {
+            artifactNameString = String.format("project('%s')", projectComponentIdentifier.getProjectPath());
+        } else {
+            artifactNameString = String.format(
+                    "'%s:%s'",
+                    artifact.getModuleVersion().getId().getGroup(),
+                    artifact.getModuleVersion().getId().getName());
+        }
         return String.format("        %s %s", suggestionConfigurationName.get(), artifactNameString);
     }
 
     /**
      * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
      */
-    private boolean isProjectArtifact(ResolvedArtifact artifact) {
-        return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
-    }
-
-    /**
-     * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
-     */
     private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
-        if (!isProjectArtifact(artifact)) {
-            return false;
+        if (artifact.getId().getComponentIdentifier()
+                instanceof ProjectComponentIdentifier projectComponentIdentifier) {
+            return projectComponentIdentifier
+                    .getProjectPath()
+                    .equals(getProject().getPath());
         }
-        return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier())
-                .getProjectPath()
-                .equals(getProject().getPath());
+
+        return false;
     }
 
     /** All classes which are mentioned in this project's source code. */
