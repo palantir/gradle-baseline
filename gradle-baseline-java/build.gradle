@@ -29,6 +29,7 @@ dependencies {
     implementation 'com.palantir.gradle.utils:lazily-configured-mapping'
     implementation 'com.palantir.gradle.utils:environment-variables'
     implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
     api 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
