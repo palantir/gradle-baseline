@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.GradleException;
 import org.gradle.api.Named;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -241,7 +240,12 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                         .lifecycle(
                                 "Deleted {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
             } else {
-                throw new GradleException(lockFile + " should not exist (as no problems were found).");
+                throw new ExceptionWithSuggestion(
+                        String.format(
+                                "%s should not exist (as no problems were found), please run `./gradlew"
+                                        + " checkClassUniqueness --fix` to remove this file.",
+                                lockFile),
+                        "./gradlew checkClassUniqueness --fix");
             }
         }
     }
