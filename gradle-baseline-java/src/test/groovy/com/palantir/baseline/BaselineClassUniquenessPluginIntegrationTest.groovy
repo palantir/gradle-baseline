@@ -219,6 +219,28 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         !new File(projectDir, "baseline-class-uniqueness.lock").exists()
     }
 
+    def '--fix removes lock file when it is not needed'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api 'com.google.guava:guava:19.0'
+            api 'org.apache.commons:commons-io:1.3.2'
+            api 'junit:junit:4.12'
+            api 'com.netflix.nebula:nebula-test:6.4.2'
+        }
+        """.stripIndent()
+        new File(projectDir, "baseline-class-uniqueness.lock").text = """
+        # Dummy lock file that should be removed
+        """
+        BuildResult result = with('checkClassUniqueness', '--fix').build()
+
+        then:
+        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS
+        println result.getOutput()
+        !new File(projectDir, "baseline-class-uniqueness.lock").exists()
+    }
+
     def 'should detect duplicates from transitive dependencies'() {
         when:
         multiProject.addSubproject('foo', """
