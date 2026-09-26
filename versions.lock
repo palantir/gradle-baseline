@@ -30,7 +30,7 @@ com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.1 (1 constraints: a51a
 
 com.fasterxml.woodstox:woodstox-core:7.2.0 (1 constraints: 3d174b26)
 
-com.github.ben-manes.caffeine:caffeine:3.2.4 (1 constraints: 0b050436)
+com.github.ben-manes.caffeine:caffeine:3.3.0 (1 constraints: 08050336)
 
 com.google.auto:auto-common:1.2.1 (1 constraints: 9d0f6d86)
 
@@ -38,7 +38,7 @@ com.google.auto.service:auto-service:1.1.1 (1 constraints: 0505f435)
 
 com.google.auto.service:auto-service-annotations:1.1.1 (1 constraints: 9c0f6a86)
 
-com.google.errorprone:error_prone_annotations:2.50.0 (6 constraints: 0f596ac5)
+com.google.errorprone:error_prone_annotations:2.50.0 (6 constraints: 0759abbe)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
@@ -176,7 +176,7 @@ org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10 (1 constraints: e210ffd2)
 
 org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 (2 constraints: 8118c1c5)
 
-org.jspecify:jspecify:1.0.1 (10 constraints: 029ecdaa)
+org.jspecify:jspecify:1.0.1 (10 constraints: 039e63ac)
 
 org.ow2.asm:asm:9.10.1 (4 constraints: 3d465a6e)
 
