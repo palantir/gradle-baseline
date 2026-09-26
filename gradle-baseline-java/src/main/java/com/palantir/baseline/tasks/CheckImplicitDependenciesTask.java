@@ -16,6 +16,8 @@
 
 package com.palantir.baseline.tasks;
 
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
@@ -24,9 +26,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.maven.shared.dependency.analyzer.DependencyUsage;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -83,21 +87,32 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
                         BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
-        Set<List<ResolvedArtifact>> necessaryArtifacts = referencedClasses().stream()
-                .map(c -> BaselineExactDependencies.INDEXES.classToArtifacts(c).collect(Collectors.toList()))
-                .collect(Collectors.toSet());
+        SetMultimap<List<ResolvedArtifact>, DependencyUsage> necessaryArtifacts = dependencyUsages()
+                .collect(ImmutableSetMultimap.toImmutableSetMultimap(
+                        usage -> BaselineExactDependencies.INDEXES
+                                .classToArtifacts(usage.getDependencyClass())
+                                .toList(),
+                        Function.identity()));
 
-        List<ResolvedArtifact> usedButUndeclared = necessaryArtifacts.stream()
+        Set<List<ResolvedArtifact>> usedButUndeclared = necessaryArtifacts.keySet().stream()
+                .filter(artifacts -> !artifacts.isEmpty())
                 .filter(artifacts -> artifacts.stream().noneMatch(this::isArtifactFromCurrentProject))
                 .filter(artifacts -> artifacts.stream().noneMatch(this::shouldIgnore))
                 .filter(artifacts -> artifacts.stream().noneMatch(declaredArtifacts::contains))
-                // Select a single deterministic artifact for the suggestion
-                .map(artifacts -> artifacts.stream().min(ARTIFACT_COMPARATOR))
-                .<ResolvedArtifact>mapMulti(Optional::ifPresent)
-                .sorted(ARTIFACT_COMPARATOR)
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableSet());
+
+        usedButUndeclared.forEach(artifacts -> {
+            necessaryArtifacts.get(artifacts).forEach(usage -> {
+                getLogger()
+                        .info("Found implicit dependency `{}` in `{}`.", usage.getDependencyClass(), usage.getUsedBy());
+            });
+        });
+
         if (!usedButUndeclared.isEmpty()) {
             String suggestion = usedButUndeclared.stream()
+                    // Select a single deterministic artifact for the suggestion
+                    .map(artifacts ->
+                            artifacts.stream().min(ARTIFACT_COMPARATOR).orElseThrow())
                     .map(this::getSuggestionString)
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
@@ -111,41 +126,36 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     private String getSuggestionString(ResolvedArtifact artifact) {
-        String artifactNameString = isProjectArtifact(artifact)
-                ? String.format(
-                        "project('%s')",
-                        ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath())
-                : String.format(
-                        "'%s:%s'",
-                        artifact.getModuleVersion().getId().getGroup(),
-                        artifact.getModuleVersion().getId().getName());
+        String artifactNameString;
+        if (artifact.getId().getComponentIdentifier()
+                instanceof ProjectComponentIdentifier projectComponentIdentifier) {
+            artifactNameString = String.format("project('%s')", projectComponentIdentifier.getProjectPath());
+        } else {
+            artifactNameString = String.format(
+                    "'%s:%s'",
+                    artifact.getModuleVersion().getId().getGroup(),
+                    artifact.getModuleVersion().getId().getName());
+        }
         return String.format("        %s %s", suggestionConfigurationName.get(), artifactNameString);
     }
 
     /**
      * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
      */
-    private boolean isProjectArtifact(ResolvedArtifact artifact) {
-        return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
-    }
-
-    /**
-     * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
-     */
     private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
-        if (!isProjectArtifact(artifact)) {
-            return false;
+        if (artifact.getId().getComponentIdentifier()
+                instanceof ProjectComponentIdentifier projectComponentIdentifier) {
+            return projectComponentIdentifier
+                    .getProjectPath()
+                    .equals(getProject().getPath());
         }
-        return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier())
-                .getProjectPath()
-                .equals(getProject().getPath());
+
+        return false;
     }
 
     /** All classes which are mentioned in this project's source code. */
-    private Set<String> referencedClasses() {
-        return Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet());
+    private Stream<DependencyUsage> dependencyUsages() {
+        return Streams.stream(sourceClasses.get().iterator()).flatMap(BaselineExactDependencies::dependencyUsages);
     }
 
     @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
