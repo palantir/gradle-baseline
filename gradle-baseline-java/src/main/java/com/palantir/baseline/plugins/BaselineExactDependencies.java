@@ -93,6 +93,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.getSourceClasses()
                                     .setFrom(sourceSet.getOutput().getClassesDirs());
                             task.getDependenciesConfigurations().add(compileClasspath);
+                            task.getReport()
+                                    .set(project.getLayout()
+                                            .getBuildDirectory()
+                                            .file("reports/unused-dependencies/" + sourceSet.getName() + ".json"));
                             task.withDeclaredDependenciesFrom(implementation);
 
                             // ignore intra-project dependencies, which are typically added automatically for things
