@@ -214,7 +214,7 @@ com.palantir.gradle.jdks:gradle-jdks-setup-common:0.82.0 (4 constraints: da4dd4e
 
 com.palantir.gradle.jdks:gradle-jdks-testing:0.82.0 (1 constraints: 3c05453b)
 
-com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.33.0 (1 constraints: 3805343b)
+com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.34.0 (1 constraints: 3905373b)
 
 com.palantir.gradle.plugintesting:configuration-cache-spec:0.77.0 (1 constraints: 4005503b)
 
