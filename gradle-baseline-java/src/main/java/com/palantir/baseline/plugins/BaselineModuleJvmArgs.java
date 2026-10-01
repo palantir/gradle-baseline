@@ -214,6 +214,10 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return;
         }
 
+        // Grab a reference to the annotation processor path early to avoid capturing a reference to the full SourceSet
+        // (which is not Gradle configuration cache compatible) in the doFirst action below.
+        FileCollection annotationProcessorPath = sourceSet.getAnnotationProcessorPath();
+
         project.getTasks().named(sourceSet.getJavadocTaskName(), Javadoc.class, javadoc -> {
             // Javadoc task is horrible. There's no lazy properties/CommandLineArgumentProviders, so we have to
             // resort to this fresh hell of changing its configuration in a task action before it runs. Once
@@ -231,7 +235,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     }
 
                     Set<String> exportValuesRaw = ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javadoc)
-                            .configureWithClasspath(sourceSet::getAnnotationProcessorPath)
+                            .configureWithClasspath(() -> annotationProcessorPath)
                             // Javadoc runs as *compilation* which means that everything that is normally an
                             // opens at runtime needs to be exports. Since we need to use the horrible
                             // addMultilineStringsOption, we just get all the arg fragments eg
