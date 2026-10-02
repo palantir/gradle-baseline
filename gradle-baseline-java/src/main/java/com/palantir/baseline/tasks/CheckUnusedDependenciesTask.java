@@ -30,6 +30,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
+import org.apache.maven.shared.dependency.analyzer.DependencyUsage;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.DependencyArtifact;
@@ -96,7 +97,8 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
 
         Set<String> necessaryArtifactsDeclaration = Streams.stream(
                         getSourceClasses().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
+                .flatMap(BaselineExactDependencies::dependencyUsages)
+                .map(DependencyUsage::getDependencyClass)
                 .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
                 .map(BaselineExactDependencies::asString)
                 .collect(Collectors.toSet());

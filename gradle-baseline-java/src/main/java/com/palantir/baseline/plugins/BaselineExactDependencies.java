@@ -31,8 +31,10 @@ import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
+import org.apache.maven.shared.dependency.analyzer.ClassesPatterns;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
+import org.apache.maven.shared.dependency.analyzer.DependencyUsage;
 import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Plugin;
@@ -135,10 +137,11 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
-    public static Stream<String> referencedClasses(File classFile) {
+    public static Stream<DependencyUsage> dependencyUsages(File classFile) {
         try {
+
             return BaselineExactDependencies.CLASS_FILE_ANALYZER
-                    .analyze(classFile.toURI().toURL())
+                    .analyzeUsages(classFile.toURI().toURL(), new ClassesPatterns())
                     .stream();
         } catch (IOException e) {
             throw new UncheckedIOException("Unable to analyze " + classFile, e);
