@@ -90,8 +90,10 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             explainJavaVersions.getDefaultTarget().set(suggestedTarget);
             explainJavaVersions.getRuntime().set(projectVersions.runtime());
             explainJavaVersions.getDefaultRuntime().set(suggestedRuntime);
-            explainJavaVersions.getReasoning().set(project.provider(() -> isLibrary(project, projectVersions)
-                    .toString()));
+            explainJavaVersions
+                    .getReasoning()
+                    .set(project.provider(
+                            () -> isLibrary(project, projectVersions).toString()));
         });
     }
 
