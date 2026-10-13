@@ -30,7 +30,7 @@ com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.3 (1 constraints: a51a
 
 com.fasterxml.woodstox:woodstox-core:7.2.0 (1 constraints: 3d174b26)
 
-com.github.ben-manes.caffeine:caffeine:3.3.0 (1 constraints: 08050336)
+com.github.ben-manes.caffeine:caffeine:3.3.1 (1 constraints: 09050436)
 
 com.google.auto:auto-common:1.2.1 (1 constraints: 9d0f6d86)
 
