@@ -90,6 +90,10 @@ test {
     environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', "0.2.0"
 
     systemProperty 'ignoreDeprecations', 'true'
+
+    testLogging {
+        events 'started', 'passed', 'skipped', 'failed'
+    }
 }
 
 gradlePlugin {
