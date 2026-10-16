@@ -22,7 +22,7 @@ com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.35.0
 
 
 # test deps
-com.fasterxml.jackson.*:* = 2.22.1
+com.fasterxml.jackson.*:* = 2.22.3
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 12.1.0
 commons-io:* = 2.22.0
