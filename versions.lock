@@ -104,7 +104,7 @@ net.ltgt.gradle:gradle-errorprone-plugin:4.3.0 (2 constraints: 3d366a24)
 
 one.util:streamex:0.9.0 (4 constraints: 294d039f)
 
-org.apache.commons:commons-lang3:3.21.0 (6 constraints: 88551b69)
+org.apache.commons:commons-lang3:3.21.0 (6 constraints: 8955076a)
 
 org.apache.maven:maven-artifact:3.9.1 (3 constraints: 82293854)
 
