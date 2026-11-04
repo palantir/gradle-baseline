@@ -237,13 +237,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             // set high compared to the target version.
             Provider<ChosenJavaVersion> checkstyleJavaVersion =
                     javaCompiler.map(ChosenJavaVersion::of).orElse(target);
-            project.getTasks().withType(Checkstyle.class).configureEach(checkstyle -> checkstyle
-                    .getJavaLauncher()
-                    .set(getJavaLauncher(
-                            rootExtension,
-                            baselineConfiguredJavaToolchains,
-                            javaToolchainService,
-                            checkstyleJavaVersion)));
+            project.getTasks()
+                    .withType(Checkstyle.class)
+                    .configureEach(checkstyle -> checkstyle
+                            .getJavaLauncher()
+                            .set(getJavaLauncher(
+                                    rootExtension,
+                                    baselineConfiguredJavaToolchains,
+                                    javaToolchainService,
+                                    checkstyleJavaVersion)));
         }
 
         project.getTasks().withType(GroovyCompile.class).configureEach(groovyCompileTask -> {
@@ -271,8 +273,11 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             scalaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
         });
 
-        project.getTasks().withType(ScalaDoc.class).configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
-                .set(getJavaLauncher(rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
+        project.getTasks()
+                .withType(ScalaDoc.class)
+                .configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
+                        .set(getJavaLauncher(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
     }
 
     private static void configureExecutionTasks(
@@ -313,8 +318,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             return;
         }
         log.debug("Using detected javaToolchains to configure the javaCompileTask");
-        javaCompileTask.getJavaCompiler().set(javaToolchainService.compilerFor(spec -> spec.getLanguageVersion()
-                .set(javaCompilerVersion)));
+        javaCompileTask
+                .getJavaCompiler()
+                .set(javaToolchainService.compilerFor(
+                        spec -> spec.getLanguageVersion().set(javaCompilerVersion)));
     }
 
     private static void setJavaDocTool(
@@ -333,8 +340,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             return;
         }
         log.debug("Using detected javaToolchains to configure javaDocTool");
-        javadocTask.getJavadocTool().set(javaToolchainService.javadocToolFor(spec -> spec.getLanguageVersion()
-                .set(version.map(ChosenJavaVersion::javaLanguageVersion))));
+        javadocTask
+                .getJavadocTool()
+                .set(javaToolchainService.javadocToolFor(
+                        spec -> spec.getLanguageVersion().set(version.map(ChosenJavaVersion::javaLanguageVersion))));
     }
 
     private static Provider<JavaLauncher> getJavaLauncher(
