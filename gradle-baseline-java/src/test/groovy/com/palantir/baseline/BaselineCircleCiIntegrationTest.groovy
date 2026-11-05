@@ -47,6 +47,19 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         }
         '''.stripIndent()
 
+    def failingJavaFile = '''
+        package test;
+
+        import org.junit.Test;
+
+        public class TestClass {
+            @Test
+            public void test() {
+                throw new AssertionError();
+            }
+        }
+        '''.stripIndent()
+
     def setup() {
         new File(System.getenv('CIRCLE_ARTIFACTS')).toPath().deleteDir()
     }
@@ -73,5 +86,46 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('test').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
         new File(new File(new File(artifacts, 'junit'), 'test'), 'index.html').isFile()
+    }
+
+    def 'html-test-reports-failed-only removes html reports of passing test tasks'() {
+        when:
+        buildFile << standardBuildFile
+        file('gradle.properties') << 'com.palantir.baseline-circleci.html-test-reports-failed-only=true\n'
+        file('src/test/java/test/TestClass.java') << javaFile
+
+        then:
+        BuildResult result = with('test').build()
+        result.task(':test').outcome == TaskOutcome.SUCCESS
+        !artifactsHtmlReportDir().exists()
+    }
+
+    def 'html-test-reports-failed-only keeps html reports of failing test tasks'() {
+        when:
+        buildFile << standardBuildFile
+        file('gradle.properties') << 'com.palantir.baseline-circleci.html-test-reports-failed-only=true\n'
+        file('src/test/java/test/TestClass.java') << failingJavaFile
+
+        then:
+        BuildResult result = with('test').buildAndFail()
+        result.task(':test').outcome == TaskOutcome.FAILED
+        new File(artifactsHtmlReportDir(), 'index.html').isFile()
+    }
+
+    def 'html-test-reports-failed-only keeps html reports when test failures are ignored'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << 'test { ignoreFailures = true }\n'
+        file('gradle.properties') << 'com.palantir.baseline-circleci.html-test-reports-failed-only=true\n'
+        file('src/test/java/test/TestClass.java') << failingJavaFile
+
+        then:
+        BuildResult result = with('test').build()
+        result.task(':test').outcome == TaskOutcome.SUCCESS
+        new File(artifactsHtmlReportDir(), 'index.html').isFile()
+    }
+
+    private static File artifactsHtmlReportDir() {
+        return new File(new File(System.getenv('CIRCLE_ARTIFACTS'), 'junit'), 'test')
     }
 }

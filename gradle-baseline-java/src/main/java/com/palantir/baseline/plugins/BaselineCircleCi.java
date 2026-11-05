@@ -28,10 +28,14 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Stream;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineCircleCi implements Plugin<Project> {
@@ -66,10 +70,18 @@ public final class BaselineCircleCi implements Plugin<Project> {
             throw new UncheckedIOException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
 
+        boolean failedOnly = project.getProviders()
+                .gradleProperty("com.palantir.baseline-circleci.html-test-reports-failed-only")
+                .map(Boolean::parseBoolean)
+                .getOrElse(false);
+
         project.getRootProject()
                 .allprojects(proj -> proj.getTasks().withType(Test.class).configureEach(test -> {
                     test.getReports().getHtml().getRequired().set(true);
                     test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
+                    if (failedOnly) {
+                        test.doLast(new DeleteHtmlReportOfPassingTests());
+                    }
                 }));
     }
 
@@ -104,6 +116,33 @@ public final class BaselineCircleCi implements Plugin<Project> {
             junitReportsDir = junitReportsDir.resolve(component);
         }
         return junitReportsDir.toFile();
+    }
+
+    private static final class DeleteHtmlReportOfPassingTests implements Action<Task> {
+        @Override
+        public void execute(Task task) {
+            Test test = (Test) task;
+            // Only reached when tests passed, unless failures are ignored.
+            if (test.getIgnoreFailures()) {
+                return;
+            }
+            Path dir = test.getReports()
+                    .getHtml()
+                    .getOutputLocation()
+                    .get()
+                    .getAsFile()
+                    .toPath();
+            if (!Files.exists(dir)) {
+                return;
+            }
+            try (Stream<Path> paths = Files.walk(dir)) {
+                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                    Files.delete(path);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException("failed to delete HTML test report " + dir, e);
+            }
+        }
     }
 
     private static void createDirectories(Path directoryPath) throws IOException {
