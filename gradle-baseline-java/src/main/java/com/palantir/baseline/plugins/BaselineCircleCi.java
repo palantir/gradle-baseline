@@ -30,8 +30,11 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Stream;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineCircleCi implements Plugin<Project> {
@@ -66,10 +69,20 @@ public final class BaselineCircleCi implements Plugin<Project> {
             throw new UncheckedIOException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
 
+        boolean failedOnly = project.getProviders()
+                .gradleProperty("com.palantir.baseline-circleci.html-test-reports-failed-only")
+                .map(Boolean::parseBoolean)
+                .getOrElse(false);
+
         project.getRootProject()
                 .allprojects(proj -> proj.getTasks().withType(Test.class).configureEach(test -> {
                     test.getReports().getHtml().getRequired().set(true);
                     test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
+                    if (failedOnly) {
+                        // Generate reports normally because the test outcome is unknown at configuration time.
+                        // doLast only runs if preceding task actions succeed, so task failures preserve the reports.
+                        test.doLast(new DeleteHtmlReportOfPassingTests());
+                    }
                 }));
     }
 
@@ -104,6 +117,32 @@ public final class BaselineCircleCi implements Plugin<Project> {
             junitReportsDir = junitReportsDir.resolve(component);
         }
         return junitReportsDir.toFile();
+    }
+
+    private static final class DeleteHtmlReportOfPassingTests implements Action<Task> {
+        @Override
+        public void execute(Task task) {
+            Test test = (Test) task;
+            Path dir = test.getReports()
+                    .getHtml()
+                    .getOutputLocation()
+                    .get()
+                    .getAsFile()
+                    .toPath();
+            if (!Files.exists(dir)) {
+                return;
+            }
+            try (Stream<Path> paths = Files.walk(dir)) {
+                // Other report types may share the output directory.
+                for (Path path : paths.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().endsWith(".html"))
+                        .toList()) {
+                    Files.delete(path);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException("failed to delete HTML test report " + dir, e);
+            }
+        }
     }
 
     private static void createDirectories(Path directoryPath) throws IOException {
