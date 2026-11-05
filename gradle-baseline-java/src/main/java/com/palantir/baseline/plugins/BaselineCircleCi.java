@@ -121,10 +121,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
         @Override
         public void execute(Task task) {
             Test test = (Test) task;
-            // Only reached when tests passed, unless failures are ignored.
-            if (test.getIgnoreFailures()) {
-                return;
-            }
             Path dir = test.getReports()
                     .getHtml()
                     .getOutputLocation()

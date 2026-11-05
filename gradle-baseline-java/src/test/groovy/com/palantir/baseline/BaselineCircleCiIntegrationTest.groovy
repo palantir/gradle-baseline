@@ -120,19 +120,6 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         new File(artifactsDir, 'junit/test/index.html').isFile()
     }
 
-    def 'html-test-reports-failed-only keeps html reports when test failures are ignored'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << 'test { ignoreFailures = true }\n'
-        file('gradle.properties') << 'com.palantir.baseline-circleci.html-test-reports-failed-only=true\n'
-        file('src/test/java/test/TestClass.java') << failingJavaFile
-
-        then:
-        BuildResult result = with('test').build()
-        result.task(':test').outcome == TaskOutcome.SUCCESS
-        new File(artifactsDir, 'junit/test/index.html').isFile()
-    }
-
     private static boolean containsHtmlReport(File directory) {
         return Files.walk(directory.toPath()).withCloseable { paths ->
             paths.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString().endsWith('.html') }
