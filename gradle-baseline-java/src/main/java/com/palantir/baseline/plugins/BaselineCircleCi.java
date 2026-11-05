@@ -28,7 +28,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Comparator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -136,7 +135,10 @@ public final class BaselineCircleCi implements Plugin<Project> {
                 return;
             }
             try (Stream<Path> paths = Files.walk(dir)) {
-                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                // Other report types may share the output directory.
+                for (Path path : paths.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().endsWith(".html"))
+                        .toList()) {
                     Files.delete(path);
                 }
             } catch (IOException e) {

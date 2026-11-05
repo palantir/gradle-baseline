@@ -17,10 +17,14 @@
 package com.palantir.baseline
 
 
+import java.nio.file.Files
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
+    private File artifactsDir
+    private File testReportsDir
+
     def standardBuildFile = '''
         plugins {
             id 'java-library'
@@ -61,7 +65,13 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
     def setup() {
-        new File(System.getenv('CIRCLE_ARTIFACTS')).toPath().deleteDir()
+        artifactsDir = new File(projectDir, 'circle/artifacts')
+        testReportsDir = new File(projectDir, 'circle/test-reports')
+        file('gradle.properties') << """
+            __TESTING=true
+            __TESTING_CIRCLE_ARTIFACTS=${artifactsDir}
+            __TESTING_CIRCLE_TEST_REPORTS=${testReportsDir}
+        """.stripIndent()
     }
 
     def 'collects junit reports'() {
@@ -69,11 +79,10 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         file('src/test/java/test/TestClass.java') << javaFile
 
-        String testReports = System.getenv('CIRCLE_TEST_REPORTS')
         then:
         BuildResult result = with('test').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
-        new File(new File(testReports, 'junit'), 'test').list().toList().toSet() == ['TEST-test.TestClass.xml'].toSet()
+        new File(testReportsDir, 'junit/test').list().toList().toSet() == ['TEST-test.TestClass.xml'].toSet()
     }
 
     def 'collects html reports'() {
@@ -81,11 +90,10 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         file('src/test/java/test/TestClass.java') << javaFile
 
-        String artifacts = System.getenv('CIRCLE_ARTIFACTS')
         then:
         BuildResult result = with('test').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
-        new File(new File(new File(artifacts, 'junit'), 'test'), 'index.html').isFile()
+        new File(artifactsDir, 'junit/test/index.html').isFile()
     }
 
     def 'html-test-reports-failed-only removes html reports of passing test tasks'() {
@@ -97,7 +105,7 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('test').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
-        !artifactsHtmlReportDir().exists()
+        !containsHtmlReport(new File(artifactsDir, 'junit/test'))
     }
 
     def 'html-test-reports-failed-only keeps html reports of failing test tasks'() {
@@ -109,7 +117,7 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('test').buildAndFail()
         result.task(':test').outcome == TaskOutcome.FAILED
-        new File(artifactsHtmlReportDir(), 'index.html').isFile()
+        new File(artifactsDir, 'junit/test/index.html').isFile()
     }
 
     def 'html-test-reports-failed-only keeps html reports when test failures are ignored'() {
@@ -122,10 +130,12 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('test').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
-        new File(artifactsHtmlReportDir(), 'index.html').isFile()
+        new File(artifactsDir, 'junit/test/index.html').isFile()
     }
 
-    private static File artifactsHtmlReportDir() {
-        return new File(new File(System.getenv('CIRCLE_ARTIFACTS'), 'junit'), 'test')
+    private static boolean containsHtmlReport(File directory) {
+        return Files.walk(directory.toPath()).withCloseable { paths ->
+            paths.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString().endsWith('.html') }
+        }
     }
 }
