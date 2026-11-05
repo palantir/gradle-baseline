@@ -79,6 +79,8 @@ public final class BaselineCircleCi implements Plugin<Project> {
                     test.getReports().getHtml().getRequired().set(true);
                     test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
                     if (failedOnly) {
+                        // Generate reports normally because the test outcome is unknown at configuration time.
+                        // doLast only runs if preceding task actions succeed, so task failures preserve the reports.
                         test.doLast(new DeleteHtmlReportOfPassingTests());
                     }
                 }));
