@@ -16,50 +16,42 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.services.JarClassHasher;
+import com.palantir.baseline.classuniqueness.ClassIndexTransform;
 import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 /**
  * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule but goes
- * one step further and actually hashes any identically named classfiles to figure out if they're <i>completely</i>
+ * one step further and actually compares any identically named classfiles to figure out if they're <i>completely</i>
  * identical (and therefore safely interchangeable).
  *
  * <p>The task only fails if it finds classes which have the same name but different implementations.
  */
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
-    @SuppressWarnings("for-rollout:TaskDependsOn")
     @Override
     public final void apply(Project project) {
-        Provider<JarClassHasher> jarClassHasher = project.getGradle()
-                .getSharedServices()
-                .registerIfAbsent("jarClassHasher", JarClassHasher.class, _spec -> {});
+        project.getDependencies().registerTransform(ClassIndexTransform.class, spec -> {
+            spec.getFrom().attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE);
+            spec.getTo().attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ClassIndexTransform.ARTIFACT_TYPE);
+        });
         TaskProvider<CheckClassUniquenessLockTask> checkClassUniqueness = project.getTasks()
                 .register("checkClassUniqueness", CheckClassUniquenessLockTask.class, task -> {
-                    task.jarClassHasher.set(jarClassHasher);
-                    task.shouldFix.convention(
-                            project.getGradle().getStartParameter().isWriteDependencyLocks());
-                    task.usesService(jarClassHasher);
+                    task.getShouldFix()
+                            .convention(project.getGradle().getStartParameter().isWriteDependencyLocks());
+                    task.getLockFile()
+                            .set(project.getLayout().getProjectDirectory().file("baseline-class-uniqueness.lock"));
+                    task.getRootDirectory().set(project.getRootDir());
                 });
         project.getPlugins().apply(LifecycleBasePlugin.class);
         project.getTasks().named(LifecycleBasePlugin.CHECK_TASK_NAME).configure(t -> t.dependsOn(checkClassUniqueness));
 
         project.getPlugins().withId("java", plugin -> {
-            checkClassUniqueness.configure(t -> {
-                Configuration runtimeClasspath =
-                        project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
-                t.configurations.add(runtimeClasspath);
-
-                // runtimeClasspath might contain jars which are 'builtBy' other tasks, for example conjure-generated
-                // objects. This dependsOn ensures that all those pre-requisite tasks get invoked first, otherwise
-                // we see log.info warnings about missing jars e.g. 'Skipping non-existent jar foo-api-objects.jar'
-                t.dependsOn(runtimeClasspath);
-            });
+            checkClassUniqueness.configure(t -> t.getConfigurations()
+                    .add(project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)));
         });
     }
 }
