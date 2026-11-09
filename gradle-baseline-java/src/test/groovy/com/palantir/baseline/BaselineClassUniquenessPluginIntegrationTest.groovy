@@ -20,6 +20,8 @@ import com.palantir.gradle.plugintesting.GradleTestVersions
 import spock.lang.Unroll
 
 import java.nio.file.Files
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -284,5 +286,202 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('checkClassUniqueness').buildAndFail()
         result.output =~ /\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass/
+    }
+
+    def 'ignores file dependencies'() {
+        when:
+        writeJar('libs/one.jar', [(FOO_CLASS_FILE): 'one'])
+        writeJar('libs/two.jar', [(FOO_CLASS_FILE): 'two'])
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api files('libs/one.jar', 'libs/two.jar')
+        }
+        """.stripIndent()
+
+        then: "file dependencies have no coordinates to show in the lock file"
+        with('checkClassUniqueness').build()
+    }
+
+    def 'labels snapshot jars with a classifier'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        String timestamped = '1.0-20250101.123456-1'
+        writeJar("repo/g/bar/1.0-SNAPSHOT/bar-${timestamped}.jar", [(FOO_CLASS_FILE): 'main'])
+        writeJar("repo/g/bar/1.0-SNAPSHOT/bar-${timestamped}-tests.jar", [(FOO_CLASS_FILE): 'tests'])
+        writePom('g', 'bar', '1.0-SNAPSHOT', "repo/g/bar/1.0-SNAPSHOT/bar-${timestamped}.pom")
+        file('repo/g/bar/1.0-SNAPSHOT/maven-metadata.xml').text = """\
+            <metadata><groupId>g</groupId><artifactId>bar</artifactId><version>1.0-SNAPSHOT</version>
+            <versioning><snapshot><timestamp>20250101.123456</timestamp><buildNumber>1</buildNumber></snapshot>
+            <lastUpdated>20250101123456</lastUpdated></versioning></metadata>
+            """.stripIndent()
+
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            maven { url = uri('repo') }
+        }
+        dependencies {
+            api 'g:bar:1.0-SNAPSHOT'
+            api 'g:bar:1.0-SNAPSHOT:tests'
+        }
+        """.stripIndent()
+        with('checkClassUniqueness', '--fix').build()
+
+        then:
+        lockfile.text == lockFile('runtimeClasspath', '[g:bar, g:bar (classifier=tests)]', FOO_CLASS)
+    }
+
+    def 'labels jars whose module name ends in a dash and digits'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        writeJar('repo/g/lib-2/2/lib-2-2.jar', [(FOO_CLASS_FILE): 'main'])
+        writeJar('repo/g/lib-2/2/lib-2-2-jdk-2.jar', [(FOO_CLASS_FILE): 'jdk'])
+        writePom('g', 'lib-2', '2', 'repo/g/lib-2/2/lib-2-2.pom')
+
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            maven { url = uri('repo') }
+        }
+        dependencies {
+            api 'g:lib-2:2'
+            api 'g:lib-2:2:jdk-2'
+        }
+        """.stripIndent()
+        with('checkClassUniqueness', '--fix').build()
+
+        then:
+        lockfile.text == lockFile('runtimeClasspath', '[g:lib-2, g:lib-2 (classifier=jdk-2)]', FOO_CLASS)
+    }
+
+    def 'indexes each jar once for projects with the same classpath'() {
+        when:
+        // a module name unique to this test run, so the jars aren't already indexed by an earlier test
+        String module = "conflicting-${UUID.randomUUID()}"
+        writeConflictingModules(module)
+        String dependencies = """
+        apply plugin: 'com.palantir.baseline-class-uniqueness'
+        repositories {
+            maven { url = uri('${new File(projectDir, 'repo').toURI()}') }
+        }
+        dependencies {
+            implementation 'g:${module}:1.0'
+            implementation 'g:${module}-copy:1.0'
+        }
+        """.stripIndent()
+        multiProject.addSubproject('one', dependencies)
+        multiProject.addSubproject('two', dependencies)
+        buildFile << standardBuildFile
+
+        BuildResult result = with('checkClassUniqueness', '--fix', '--info').build()
+
+        then:
+        String expected = lockFile('runtimeClasspath', "[g:${module}, g:${module}-copy]", FOO_CLASS)
+        file('one/baseline-class-uniqueness.lock').text == expected
+        file('two/baseline-class-uniqueness.lock').text == expected
+
+        and: "the transforms cache shares an index between projects: Gradle logs this line for each run of the transform"
+        result.output.findAll(/Caching disabled for ClassIndexTransform: \S+\/${module}-1\.0\.jar because/).size() == 1
+    }
+
+    def 'works with the configuration cache'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        writeConflictingModules('conflicting')
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            maven { url = uri('repo') }
+        }
+        dependencies {
+            implementation 'g:conflicting:1.0'
+            implementation 'g:conflicting-copy:1.0'
+        }
+        """.stripIndent()
+
+        then:
+        with('checkClassUniqueness', '--configuration-cache').buildAndFail().output
+                .contains('baseline-class-uniqueness detected multiple jars containing identically named classes')
+        with('checkClassUniqueness', '--configuration-cache', '--fix').build()
+
+        when:
+        BuildResult reused = with('checkClassUniqueness', '--configuration-cache').build()
+
+        then:
+        reused.output.contains('Configuration cache entry reused')
+        reused.task(':checkClassUniqueness').outcome == TaskOutcome.UP_TO_DATE
+
+        when:
+        lockfile.text = lockfile.text.replace(FOO_CLASS, 'com.example.Bar')
+        BuildResult outOfDate = with('checkClassUniqueness', '--configuration-cache').buildAndFail()
+
+        then: "the check still runs on a reused entry"
+        outOfDate.output.contains('Configuration cache entry reused')
+        outOfDate.output.contains('baseline-class-uniqueness.lock is out of date')
+    }
+
+    def 'skips jars that do not exist and checks the rest'() {
+        when:
+        multiProject.addSubproject('nojar', """
+        tasks.named('jar') { enabled = false }
+        """)
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api project(':nojar')
+            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+        }
+        """.stripIndent()
+
+        then:
+        with('checkClassUniqueness').buildAndFail().output.contains("[javax.el:javax.el-api, javax.servlet.jsp:jsp-api]")
+    }
+
+    private static final String FOO_CLASS = 'com.example.Foo'
+    private static final String FOO_CLASS_FILE = 'com/example/Foo.class'
+
+    private static String lockFile(String configuration, String jars, String className) {
+        return """\
+            # Danger! Multiple jars contain identically named classes. This may cause different behaviour depending on classpath ordering.
+            # Run ./gradlew checkClassUniqueness --fix to update this file
+
+            ## ${configuration}
+            ${jars}
+              - ${className}
+            """.stripIndent()
+    }
+
+    /** Two modules, {@code g:<module>:1.0} and {@code g:<module>-copy:1.0}, with differing copies of one class. */
+    private void writeConflictingModules(String module) {
+        writeJar("repo/g/${module}/1.0/${module}-1.0.jar", [(FOO_CLASS_FILE): 'one'])
+        writePom('g', module, '1.0', "repo/g/${module}/1.0/${module}-1.0.pom")
+        writeJar("repo/g/${module}-copy/1.0/${module}-copy-1.0.jar", [(FOO_CLASS_FILE): 'two'])
+        writePom('g', "${module}-copy", '1.0', "repo/g/${module}-copy/1.0/${module}-copy-1.0.pom")
+    }
+
+    private void writeJar(String path, Map<String, String> entries) {
+        File jar = file(path)
+        jar.parentFile.mkdirs()
+        new ZipOutputStream(jar.newOutputStream()).withCloseable { zip ->
+            entries.each { name, content ->
+                zip.putNextEntry(new ZipEntry(name))
+                zip.write(content.bytes)
+                zip.closeEntry()
+            }
+        }
+    }
+
+    private void writePom(String group, String module, String version, String path) {
+        File pom = file(path)
+        pom.parentFile.mkdirs()
+        pom.text = """\
+            <project><modelVersion>4.0.0</modelVersion><groupId>${group}</groupId><artifactId>${module}</artifactId>
+            <version>${version}</version></project>
+            """.stripIndent()
     }
 }
