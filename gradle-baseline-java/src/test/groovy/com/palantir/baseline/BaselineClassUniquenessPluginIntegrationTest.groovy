@@ -20,7 +20,6 @@ import com.palantir.gradle.plugintesting.GradleTestVersions
 import spock.lang.Unroll
 
 import java.nio.file.Files
-import java.util.stream.Stream
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -267,13 +266,12 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.output.contains("baseline-class-uniqueness detected multiple jars containing identically named classes")
     }
 
-    def 'currently skips duplicates from user-authored code'() {
+    def 'detects duplicates in project jars'() {
         when:
-        Stream.of(multiProject.addSubproject('foo'), multiProject.addSubproject('bar')).forEach({ subproject ->
-            File myClass = new File(subproject, "src/main/com/something/MyClass.java")
-            Files.createDirectories(myClass.toPath().getParent())
-            myClass << "package com.something; class MyClass {}"
-        })
+        multiProject.addSubproject('foo')
+        multiProject.addSubproject('bar')
+        file('foo/src/main/java/com/something/MyClass.java') << 'package com.something; class MyClass { int foo; }'
+        file('bar/src/main/java/com/something/MyClass.java') << 'package com.something; class MyClass { int bar; }'
 
         buildFile << standardBuildFile
         buildFile << """
@@ -284,8 +282,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkClassUniqueness', '--info').build()
-        println result.getOutput()
-        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
+        BuildResult result = with('checkClassUniqueness').buildAndFail()
+        result.output =~ /\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass/
     }
 }
