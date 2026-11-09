@@ -19,14 +19,12 @@ package com.palantir.baseline.classuniqueness;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -136,20 +134,19 @@ public final class ClassIndex {
 
     /** Loads everything but the names. */
     public static ClassIndex read(Path file) throws IOException {
-        try (InputStream fileIn = Files.newInputStream(file);
-                DataInputStream in = new DataInputStream(new BufferedInputStream(fileIn, BUFFER_BYTES))) {
-            if (in.readInt() != MAGIC) {
+        // Reads exactly the bytes needed: a check opens hundreds of mostly small indexes, so a fixed-size read buffer
+        // per file would dwarf the data itself.
+        try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
+            ByteBuffer header = readFully(channel, file, 0, HEADER_BYTES);
+            if (header.getInt(0) != MAGIC) {
                 throw new IOException("Not a class index: " + file);
             }
-            int size = in.readInt();
+            int size = header.getInt(4);
+            LongBuffer arrays = readFully(channel, file, HEADER_BYTES, Math.multiplyExact(16, size))
+                    .asLongBuffer();
             long[] nameHashes = new long[size];
             long[] crcSizes = new long[size];
-            for (int i = 0; i < size; i++) {
-                nameHashes[i] = in.readLong();
-            }
-            for (int i = 0; i < size; i++) {
-                crcSizes[i] = in.readLong();
-            }
+            arrays.get(nameHashes).get(crcSizes);
             return new ClassIndex(file, nameHashes, crcSizes);
         }
     }
@@ -176,20 +173,26 @@ public final class ClassIndex {
         int namesAt = 4 * (size() + 1);
         ByteBuffer section;
         try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
-            section = ByteBuffer.allocate(Math.toIntExact(channel.size() - sectionStart));
-            while (section.hasRemaining()) {
-                if (channel.read(section, sectionStart + section.position()) < 0) {
-                    throw new IOException("Truncated class index: " + file);
-                }
-            }
+            section = readFully(channel, file, sectionStart, Math.toIntExact(channel.size() - sectionStart));
         }
         List<String> names = new ArrayList<>(positions.size());
         for (int position : positions) {
             int start = section.getInt(4 * position);
             int end = section.getInt(4 * position + 4);
-            names.add(new String(section.array(), namesAt + start, end - start, StandardCharsets.UTF_8));
+            names.add(new String(
+                    section.array(), section.arrayOffset() + namesAt + start, end - start, StandardCharsets.UTF_8));
         }
         return names;
+    }
+
+    private static ByteBuffer readFully(FileChannel channel, Path file, long position, int length) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(length);
+        while (buffer.hasRemaining()) {
+            if (channel.read(buffer, position + buffer.position()) < 0) {
+                throw new IOException("Truncated class index: " + file);
+            }
+        }
+        return buffer.flip();
     }
 
     private static long hashName(String dottedName) {
