@@ -19,7 +19,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -48,18 +48,26 @@ final class JarLabels {
      * The classifier in a jar's file name, which is the only place the public API exposes it.
      *
      * <p>Gradle names artifacts from Maven and Ivy repositories {@code <module>-<version>[-<classifier>].<extension>},
-     * and unique snapshots have a timestamp in place of {@code SNAPSHOT}. Files listed in Gradle Module Metadata can
-     * have any name, and Gradle takes their classifier from what follows the last occurrence of the version, so that
-     * is the fallback.
+     * and unique snapshots have a timestamp in place of {@code SNAPSHOT}. For {@code g:bar:1.0-SNAPSHOT}:
+     * <ul>
+     *   <li>{@code bar-1.0-20250101.123456-1.jar} has no classifier
+     *   <li>{@code bar-1.0-20250101.123456-1-tests.jar} has classifier {@code tests}
+     *   <li>{@code bar-1.0-SNAPSHOT-tests.jar}, a snapshot published without a timestamp, has classifier {@code tests}
+     * </ul>
+     *
+     * <p>Files listed in Gradle Module Metadata can have any name, and Gradle takes their classifier from what follows
+     * the last occurrence of the version, so that is the fallback.
      */
     static Optional<String> classifier(String module, String version, String fileName) {
-        Set<String> versions = versionsIn(version, fileName);
+        List<String> versions = versionsIn(version, fileName);
+        // Maven and Ivy files, which start with the module and version: foo-1.0-spark-1.0.jar has classifier spark-1.0
         for (String candidate : versions) {
             String prefix = module + "-" + candidate;
             if (fileName.startsWith(prefix) && versionEndsAt(fileName, prefix.length())) {
                 return classifierAfter(fileName, prefix.length());
             }
         }
+        // Files named by Gradle Module Metadata: foo-core-1.0-natives.jar has classifier natives
         for (String candidate : versions) {
             int start = fileName.lastIndexOf("-" + candidate);
             int end = start + candidate.length() + 1;
@@ -94,19 +102,17 @@ final class JarLabels {
     }
 
     /** The version, and for a snapshot, the timestamped version the file name has in its place. */
-    private static Set<String> versionsIn(String version, String fileName) {
-        Set<String> versions = new LinkedHashSet<>();
-        versions.add(version);
+    private static List<String> versionsIn(String version, String fileName) {
         if (version.endsWith("-" + SNAPSHOT)) {
             // e.g. version 1.0-SNAPSHOT in bar-1.0-20250101.123456-1-tests.jar
             String base = version.substring(0, version.length() - SNAPSHOT.length());
             Matcher timestamped = Pattern.compile(Pattern.quote(base) + "\\d{8}\\.\\d{6}-\\d+")
                     .matcher(fileName);
             if (timestamped.find()) {
-                versions.add(timestamped.group());
+                return List.of(version, timestamped.group());
             }
         }
-        return versions;
+        return List.of(version);
     }
 
     /** Whether the version ends at {@code end}: followed by nothing, a classifier, or the extension. */
@@ -114,6 +120,14 @@ final class JarLabels {
         return end == fileName.length() || fileName.charAt(end) == '-' || fileName.lastIndexOf('.') == end;
     }
 
+    /**
+     * The classifier in a file name whose version ends at {@code end}. With {@code end} just after {@code 1.0}:
+     * <ul>
+     *   <li>{@code foo-1.0-tests.jar} gives {@code tests}
+     *   <li>{@code foo-1.0-linux-x86_64.v2.jar} gives {@code linux-x86_64.v2}
+     *   <li>{@code foo-1.0.jar} and {@code foo-1.0} give none
+     * </ul>
+     */
     private static Optional<String> classifierAfter(String fileName, int end) {
         if (end == fileName.length() || fileName.charAt(end) != '-') {
             return Optional.empty();
