@@ -43,22 +43,32 @@ import java.util.zip.ZipFile;
 /**
  * The class names and content checksums of one jar, in a compact form that is cheap to load.
  *
- * <p>Checking a classpath only needs the name hashes and checksums. Names are read for the few classes that turn out to
- * conflict.
+ * <p>A classpath is checked on every build, but a jar's classes only change when the jar does. So each jar is indexed
+ * once, and a check merges the indexes of its classpath instead of reading every class of every jar.
+ *
+ * <p>Finding the classes that more than one jar defines with differing content only needs a hash of each class name
+ * and a checksum of its content: 16 bytes a class, which come first so a check reads just those. The names make up
+ * most of the file but are only needed for the few classes that turn out to conflict, so they come last, behind a
+ * table of offsets, and are read only for the jars that have conflicts.
  *
  * <p>Layout, big-endian:
  * <pre>
  *   int      MAGIC
- *   int      n
+ *   int      n            number of class entries: the length of each array below
  *   long[n]  nameHashes   murmur3_128 (first 64 bits) of the dotted class name; ascending, ties broken by crcSize
  *   long[n]  crcSizes     (CRC-32 &lt;&lt; 32) | uncompressed size, both from the zip central directory
- *   int[n+1] nameOffsets  into the names section, in the same order; the last one is the length of the names
- *   byte[]   names        UTF-8 dotted class names
+ *   int[n+1] nameOffsets  where each name starts in names, in nameHashes order; the last one is the length of names
+ *   byte[]   names        UTF-8 dotted class names, concatenated with no separator: name i is
+ *                         names[nameOffsets[i], nameOffsets[i+1])
  * </pre>
  */
 public final class ClassIndex {
     private static final int MAGIC = 0x43554932; // "CUI2"
-    private static final int HEADER_BYTES = 8;
+    private static final int COUNT_OFFSET = Integer.BYTES;
+    private static final int HEADER_BYTES = 2 * Integer.BYTES;
+    /** The bytes each entry takes in nameHashes and crcSizes together. */
+    private static final int ENTRY_BYTES = 2 * Long.BYTES;
+    private static final int NAME_OFFSET_BYTES = Integer.BYTES;
     private static final int BUFFER_BYTES = 1 << 16;
     private static final HashFunction NAME_HASH = Hashing.murmur3_128();
 
@@ -141,8 +151,8 @@ public final class ClassIndex {
             if (header.getInt(0) != MAGIC) {
                 throw new IOException("Not a class index: " + file);
             }
-            int size = header.getInt(4);
-            LongBuffer arrays = readFully(channel, file, HEADER_BYTES, Math.multiplyExact(16, size))
+            int size = header.getInt(COUNT_OFFSET);
+            LongBuffer arrays = readFully(channel, file, HEADER_BYTES, Math.multiplyExact(ENTRY_BYTES, size))
                     .asLongBuffer();
             long[] nameHashes = new long[size];
             long[] crcSizes = new long[size];
@@ -169,20 +179,24 @@ public final class ClassIndex {
      * cheaper than seeking to each name once more than a handful are needed.
      */
     public List<String> names(List<Integer> positions) throws IOException {
-        long sectionStart = HEADER_BYTES + 16L * size();
-        int namesAt = 4 * (size() + 1);
-        ByteBuffer section;
-        try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
-            section = readFully(channel, file, sectionStart, Math.toIntExact(channel.size() - sectionStart));
-        }
+        ByteBuffer section = readNameOffsetsAndNames();
+        int namesAt = NAME_OFFSET_BYTES * (size() + 1);
         List<String> names = new ArrayList<>(positions.size());
         for (int position : positions) {
-            int start = section.getInt(4 * position);
-            int end = section.getInt(4 * position + 4);
+            int start = section.getInt(NAME_OFFSET_BYTES * position);
+            int end = section.getInt(NAME_OFFSET_BYTES * (position + 1));
             names.add(new String(
                     section.array(), section.arrayOffset() + namesAt + start, end - start, StandardCharsets.UTF_8));
         }
         return names;
+    }
+
+    /** The nameOffsets table and the names section, which run to the end of the file. */
+    private ByteBuffer readNameOffsetsAndNames() throws IOException {
+        long start = HEADER_BYTES + (long) ENTRY_BYTES * size();
+        try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
+            return readFully(channel, file, start, Math.toIntExact(channel.size() - start));
+        }
     }
 
     private static ByteBuffer readFully(FileChannel channel, Path file, long position, int length) throws IOException {
