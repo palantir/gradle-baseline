@@ -64,15 +64,12 @@ public abstract class ClassIndexTransform implements TransformAction<TransformPa
             throw new UncheckedIOException("Failed to index the classes of " + jar, e);
         }
         if (!duplicates.isEmpty()) {
-            log.warn(
-                    """
-                    Warning: Gradle Baseline found a dependency jar that contains more than one zip entry for \
-                    a class and is likely malformed: {}
-                    The following entries appear multiple times: {}
-                    This issue should be reported to the maintainer of the dependency.\
-                    """,
-                    jar.getName(),
-                    duplicates);
+            log.warn("""
+                Warning: Gradle Baseline found a dependency jar that contains more than one zip entry for \
+                a class and is likely malformed: {}
+                The following entries appear multiple times: {}
+                This issue should be reported to the maintainer of the dependency.\
+                """, jar.getName(), duplicates);
         }
     }
 

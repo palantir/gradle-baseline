@@ -121,7 +121,9 @@ public final class ConflictFinder {
         Map<Jar, List<IndexEntry>> entriesByJar = new HashMap<>();
         for (List<IndexEntry> sameNameHash : candidates) {
             for (IndexEntry entry : sameNameHash) {
-                entriesByJar.computeIfAbsent(entry.jar(), _jar -> new ArrayList<>()).add(entry);
+                entriesByJar
+                        .computeIfAbsent(entry.jar(), _jar -> new ArrayList<>())
+                        .add(entry);
             }
         }
         List<NamedEntry> namedEntries = new ArrayList<>();

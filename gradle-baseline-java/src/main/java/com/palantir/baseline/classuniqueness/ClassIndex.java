@@ -68,6 +68,7 @@ public final class ClassIndex {
     private static final int HEADER_BYTES = 2 * Integer.BYTES;
     /** The bytes each entry takes in nameHashes and crcSizes together. */
     private static final int ENTRY_BYTES = 2 * Long.BYTES;
+
     private static final int NAME_OFFSET_BYTES = Integer.BYTES;
     private static final int BUFFER_BYTES = 1 << 16;
     private static final HashFunction NAME_HASH = Hashing.murmur3_128();

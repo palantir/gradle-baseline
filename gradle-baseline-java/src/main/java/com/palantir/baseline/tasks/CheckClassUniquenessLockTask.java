@@ -215,7 +215,11 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                 getLogger()
                         .lifecycle(
                                 "Deleted {}",
-                                getLogPathsRelativeTo().get().getAsFile().toPath().relativize(lockFile.toPath()));
+                                getLogPathsRelativeTo()
+                                        .get()
+                                        .getAsFile()
+                                        .toPath()
+                                        .relativize(lockFile.toPath()));
             } else {
                 throw new ExceptionWithSuggestion(
                         String.format(
