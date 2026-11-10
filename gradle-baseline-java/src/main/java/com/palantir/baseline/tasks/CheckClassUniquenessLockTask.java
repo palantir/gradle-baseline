@@ -77,7 +77,9 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
             checked.from(configuration);
             getCheckedConfigurations().add(checked);
         });
-        onlyIf(_task -> !getCheckedConfigurations().get().isEmpty());
+        onlyIf(
+                "there are configurations to check",
+                _task -> !getCheckedConfigurations().get().isEmpty());
     }
 
     @Inject
