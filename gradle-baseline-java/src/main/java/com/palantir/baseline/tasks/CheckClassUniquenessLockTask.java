@@ -36,8 +36,9 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.inject.Inject;
+import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.DomainObjectSet;
@@ -61,8 +62,9 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
             + "cause different behaviour depending on classpath ordering.\n"
             + "# Run ./gradlew checkClassUniqueness --fix to update this file\n\n";
 
-    // Configurations can't be stored in the configuration cache, so each one is captured as a CheckedConfiguration
-    // when it is added, and this set is left out of the cache.
+    // Lets builds add configurations with `configurations.add ...`, as they did when this was a public SetProperty
+    // field. Configurations can't be stored in the configuration cache, so each one is captured as a
+    // CheckedConfiguration when it is added, and this set is left out of the cache.
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final transient DomainObjectSet<Configuration> configurations;
 
@@ -95,9 +97,9 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
     @OutputFile
     public abstract RegularFileProperty getLockFile();
 
-    /** Lock file paths are logged relative to this directory. */
+    /** The lock file's path is printed relative to this directory when {@code --fix} writes or deletes it. */
     @Internal
-    public abstract DirectoryProperty getRootDirectory();
+    public abstract DirectoryProperty getLogPathsRelativeTo();
 
     @TaskAction
     public final void doIt() throws IOException {
@@ -138,11 +140,11 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
         for (Conflict conflict : conflicts) {
             classesByHeader.put(clashingJarHeader(conflict.jarLabels()), conflict.classNames());
         }
-        return classesByHeader.entrySet().stream()
-                .flatMap(entry -> Stream.concat(
-                        Stream.of(entry.getKey()),
-                        entry.getValue().stream().map(className -> String.format("  - %s", className))))
-                .collect(Collectors.joining("\n"));
+        return EntryStream.of(classesByHeader)
+                .flatMapKeyValue((header, classNames) -> StreamEx.of(classNames)
+                        .map(className -> String.format("  - %s", className))
+                        .prepend(header))
+                .joining("\n");
     }
 
     private static String clashingJarHeader(Set<String> jarLabels) {
@@ -160,7 +162,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
             getLogger()
                     .lifecycle(
                             "Updated {}",
-                            getRootDirectory().get().getAsFile().toPath().relativize(lockFile.toPath()));
+                            getLogPathsRelativeTo().get().getAsFile().toPath().relativize(lockFile.toPath()));
             return;
         }
 
@@ -213,7 +215,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                 getLogger()
                         .lifecycle(
                                 "Deleted {}",
-                                getRootDirectory().get().getAsFile().toPath().relativize(lockFile.toPath()));
+                                getLogPathsRelativeTo().get().getAsFile().toPath().relativize(lockFile.toPath()));
             } else {
                 throw new ExceptionWithSuggestion(
                         String.format(

@@ -44,7 +44,7 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
                             .convention(project.getGradle().getStartParameter().isWriteDependencyLocks());
                     task.getLockFile()
                             .set(project.getLayout().getProjectDirectory().file("baseline-class-uniqueness.lock"));
-                    task.getRootDirectory().set(project.getRootDir());
+                    task.getLogPathsRelativeTo().set(project.getRootDir());
                 });
         project.getPlugins().apply(LifecycleBasePlugin.class);
         project.getTasks().named(LifecycleBasePlugin.CHECK_TASK_NAME).configure(t -> t.dependsOn(checkClassUniqueness));
