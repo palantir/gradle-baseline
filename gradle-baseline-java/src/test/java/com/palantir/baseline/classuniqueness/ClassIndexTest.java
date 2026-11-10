@@ -73,7 +73,7 @@ class ClassIndexTest {
         ClassIndex sameAsOne = index(TestJars.write(tempDir, "same", ImmutableMap.of(FOO, "one")));
         ClassIndex two = index(TestJars.write(tempDir, "two", ImmutableMap.of(FOO, "two")));
 
-        assertThat(one.crcSize(0)).isEqualTo(sameAsOne.crcSize(0)).isNotEqualTo(two.crcSize(0));
+        assertThat(one.crcAndSize(0)).isEqualTo(sameAsOne.crcAndSize(0)).isNotEqualTo(two.crcAndSize(0));
     }
 
     @Test

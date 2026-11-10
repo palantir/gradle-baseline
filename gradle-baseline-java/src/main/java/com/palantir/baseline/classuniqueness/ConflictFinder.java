@@ -43,7 +43,7 @@ public final class ConflictFinder {
     public record Conflict(Set<String> jarLabels, SortedSet<String> classNames) {}
 
     /** One class in a jar's index, without its name: its position in that index, and its content checksum. */
-    private record IndexEntry(Jar jar, int position, long crcSize) {}
+    private record IndexEntry(Jar jar, int position, long crcAndSize) {}
 
     /** An index entry once its class name has been read. */
     private record NamedEntry(IndexEntry entry, String name) {}
@@ -109,7 +109,7 @@ public final class ConflictFinder {
                 if (Arrays.binarySearch(duplicatedNameHashes, nameHash) >= 0) {
                     entriesByNameHash
                             .computeIfAbsent(nameHash, _nameHash -> new ArrayList<>())
-                            .add(new IndexEntry(jar, position, index.crcSize(position)));
+                            .add(new IndexEntry(jar, position, index.crcAndSize(position)));
                 }
             }
         }
@@ -171,9 +171,9 @@ public final class ConflictFinder {
     }
 
     private static boolean contentDiffers(List<IndexEntry> entries) {
-        long first = entries.get(0).crcSize();
+        long first = entries.get(0).crcAndSize();
         for (IndexEntry entry : entries) {
-            if (entry.crcSize() != first) {
+            if (entry.crcAndSize() != first) {
                 return true;
             }
         }
