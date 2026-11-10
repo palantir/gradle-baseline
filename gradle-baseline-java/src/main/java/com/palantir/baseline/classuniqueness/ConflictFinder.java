@@ -19,6 +19,7 @@ package com.palantir.baseline.classuniqueness;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.LongStream;
 
 /** Finds classes that more than one jar on a classpath defines with differing content. */
 public final class ConflictFinder {
@@ -36,129 +36,141 @@ public final class ConflictFinder {
     /** A jar on the classpath: how it is shown in the lock file, and its index. */
     public record Jar(String label, ClassIndex index) {}
 
-    /** One class entry: which jar on the classpath, its position in that jar's index, and its content checksum. */
-    private record Entry(int jar, int position, long crcSize) {}
-
     /**
-     * Class names that jars define with differing content, keyed by the labels of every jar containing them: the
-     * shape of a lock-file section.
+     * Classes that all the given jars contain, with differing content in at least two of them: one section of the lock
+     * file.
      */
-    public static Map<Set<String>, SortedSet<String>> find(List<Jar> classpath) throws IOException {
-        List<List<Entry>> candidates = candidates(classpath);
-        Map<Entry, String> names = readNames(classpath, candidates);
-        return differingClasses(classpath, candidates, names);
+    public record Conflict(Set<String> jarLabels, SortedSet<String> classNames) {}
+
+    /** One class in a jar's index, without its name: its position in that index, and its content checksum. */
+    private record IndexEntry(Jar jar, int position, long crcSize) {}
+
+    /** An index entry once its class name has been read. */
+    private record NamedEntry(IndexEntry entry, String name) {}
+
+    public static List<Conflict> find(List<Jar> classpath) throws IOException {
+        return conflicts(readNames(candidates(classpath)));
     }
 
     /**
      * Groups of entries that share a name hash but not their content: the only entries whose names are needed.
      * Identical copies are harmless and by far the most common kind of duplicate, so they are dropped here.
      */
-    private static List<List<Entry>> candidates(List<Jar> classpath) {
-        long[] duplicated = duplicatedNameHashes(classpath);
-        return entriesWithNameHashIn(classpath, duplicated).values().stream()
+    private static List<List<IndexEntry>> candidates(List<Jar> classpath) {
+        long[] duplicatedNameHashes = duplicatedNameHashes(classpath);
+        return entriesWithNameHashIn(classpath, duplicatedNameHashes).stream()
                 .filter(ConflictFinder::contentDiffers)
                 .toList();
     }
 
     /**
      * Name hashes found in more than one entry across the classpath, ascending. Almost every class is in exactly one
-     * jar, so this is a tiny fraction of the classpath.
+     * jar, so this is a tiny fraction of the classpath. The hashes stay primitive {@code long}s: this sorts one for
+     * every class on the classpath.
      */
     private static long[] duplicatedNameHashes(List<Jar> classpath) {
-        long[] all =
+        long[] allNameHashes =
                 new long[classpath.stream().mapToInt(jar -> jar.index().size()).sum()];
-        int at = 0;
+        int next = 0;
         for (Jar jar : classpath) {
             for (int position = 0; position < jar.index().size(); position++) {
-                all[at++] = jar.index().nameHash(position);
+                allNameHashes[next] = jar.index().nameHash(position);
+                next++;
             }
         }
-        Arrays.sort(all);
+        Arrays.sort(allNameHashes);
 
-        // After sorting, equal hashes sit next to each other. Keep one copy of every run longer than one.
-        LongStream.Builder duplicated = LongStream.builder();
+        // After sorting, equal hashes sit next to each other. Keep one copy of every run longer than one, moving it
+        // to the front of the array, which the loop has already read past.
+        int duplicated = 0;
         int start = 0;
-        while (start < all.length) {
+        while (start < allNameHashes.length) {
             int end = start + 1;
-            while (end < all.length && all[end] == all[start]) {
+            while (end < allNameHashes.length && allNameHashes[end] == allNameHashes[start]) {
                 end++;
             }
             if (end - start > 1) {
-                duplicated.add(all[start]);
+                allNameHashes[duplicated] = allNameHashes[start];
+                duplicated++;
             }
             start = end;
         }
-        return duplicated.build().toArray();
+        return Arrays.copyOf(allNameHashes, duplicated);
     }
 
-    /** Every entry whose name hash is in {@code duplicated}, grouped by that hash. */
-    private static Map<Long, List<Entry>> entriesWithNameHashIn(List<Jar> classpath, long[] duplicated) {
-        Map<Long, List<Entry>> entriesByHash = new HashMap<>();
-        for (int jar = 0; jar < classpath.size(); jar++) {
-            ClassIndex index = classpath.get(jar).index();
+    /** Every entry whose name hash is in {@code duplicatedNameHashes}, grouped by that hash. */
+    private static Collection<List<IndexEntry>> entriesWithNameHashIn(
+            List<Jar> classpath, long[] duplicatedNameHashes) {
+        Map<Long, List<IndexEntry>> entriesByNameHash = new HashMap<>();
+        for (Jar jar : classpath) {
+            ClassIndex index = jar.index();
             for (int position = 0; position < index.size(); position++) {
-                long hash = index.nameHash(position);
-                if (Arrays.binarySearch(duplicated, hash) >= 0) {
-                    entriesByHash
-                            .computeIfAbsent(hash, _hash -> new ArrayList<>())
-                            .add(new Entry(jar, position, index.crcSize(position)));
+                long nameHash = index.nameHash(position);
+                if (Arrays.binarySearch(duplicatedNameHashes, nameHash) >= 0) {
+                    entriesByNameHash
+                            .computeIfAbsent(nameHash, _nameHash -> new ArrayList<>())
+                            .add(new IndexEntry(jar, position, index.crcSize(position)));
                 }
             }
         }
-        return entriesByHash;
+        return entriesByNameHash.values();
     }
 
     /** Reads names one jar at a time, so each index file is read at most once. */
-    private static Map<Entry, String> readNames(List<Jar> classpath, List<List<Entry>> candidates) throws IOException {
-        Map<Integer, List<Entry>> byJar = new HashMap<>();
-        for (List<Entry> entries : candidates) {
-            for (Entry entry : entries) {
-                byJar.computeIfAbsent(entry.jar(), _jar -> new ArrayList<>()).add(entry);
+    private static List<NamedEntry> readNames(List<List<IndexEntry>> candidates) throws IOException {
+        Map<Jar, List<IndexEntry>> entriesByJar = new HashMap<>();
+        for (List<IndexEntry> sameNameHash : candidates) {
+            for (IndexEntry entry : sameNameHash) {
+                entriesByJar.computeIfAbsent(entry.jar(), _jar -> new ArrayList<>()).add(entry);
             }
         }
-        Map<Entry, String> names = new HashMap<>();
-        for (Map.Entry<Integer, List<Entry>> sameJar : byJar.entrySet()) {
-            List<Entry> entries = sameJar.getValue();
-            entries.sort(Comparator.comparingInt(Entry::position));
-            List<String> jarNames = classpath
-                    .get(sameJar.getKey())
+        List<NamedEntry> namedEntries = new ArrayList<>();
+        for (Map.Entry<Jar, List<IndexEntry>> sameJar : entriesByJar.entrySet()) {
+            List<IndexEntry> jarEntries = sameJar.getValue();
+            jarEntries.sort(Comparator.comparingInt(IndexEntry::position));
+            List<String> names = sameJar.getKey()
                     .index()
-                    .names(entries.stream().map(Entry::position).toList());
-            for (int i = 0; i < entries.size(); i++) {
-                names.put(entries.get(i), jarNames.get(i));
+                    .names(jarEntries.stream().map(IndexEntry::position).toList());
+            for (int i = 0; i < jarEntries.size(); i++) {
+                namedEntries.add(new NamedEntry(jarEntries.get(i), names.get(i)));
             }
         }
-        return names;
+        return namedEntries;
     }
 
-    private static Map<Set<String>, SortedSet<String>> differingClasses(
-            List<Jar> classpath, List<List<Entry>> candidates, Map<Entry, String> names) {
-        Map<Set<String>, SortedSet<String>> classesByJars = new HashMap<>();
-        for (List<Entry> entries : candidates) {
-            // Grouping by name also separates distinct classes whose 64-bit name hashes happen to collide.
-            Map<String, List<Entry>> byName = new HashMap<>();
-            for (Entry entry : entries) {
-                byName.computeIfAbsent(names.get(entry), _name -> new ArrayList<>())
-                        .add(entry);
-            }
-            byName.forEach((name, sameName) -> {
-                Set<String> jars = new HashSet<>();
-                for (Entry entry : sameName) {
-                    jars.add(classpath.get(entry.jar()).label());
-                }
-                if (jars.size() > 1 && contentDiffers(sameName)) {
-                    classesByJars
-                            .computeIfAbsent(jars, _jars -> new TreeSet<>())
-                            .add(name);
-                }
-            });
+    /**
+     * Classes found in more than one jar with differing content, grouped by the jars containing them. Entries are
+     * grouped by their name rather than their name hash, as distinct names can, rarely, have equal hashes.
+     */
+    private static List<Conflict> conflicts(List<NamedEntry> namedEntries) {
+        Map<String, List<IndexEntry>> entriesByName = new HashMap<>();
+        for (NamedEntry named : namedEntries) {
+            entriesByName
+                    .computeIfAbsent(named.name(), _name -> new ArrayList<>())
+                    .add(named.entry());
         }
-        return classesByJars;
+        Map<Set<String>, SortedSet<String>> classNamesByJarLabels = new HashMap<>();
+        for (Map.Entry<String, List<IndexEntry>> sameName : entriesByName.entrySet()) {
+            Set<String> jarLabels = new HashSet<>();
+            for (IndexEntry entry : sameName.getValue()) {
+                jarLabels.add(entry.jar().label());
+            }
+            if (jarLabels.size() > 1 && contentDiffers(sameName.getValue())) {
+                classNamesByJarLabels
+                        .computeIfAbsent(jarLabels, _jarLabels -> new TreeSet<>())
+                        .add(sameName.getKey());
+            }
+        }
+        List<Conflict> conflicts = new ArrayList<>(classNamesByJarLabels.size());
+        for (Map.Entry<Set<String>, SortedSet<String>> sameJars : classNamesByJarLabels.entrySet()) {
+            conflicts.add(new Conflict(sameJars.getKey(), sameJars.getValue()));
+        }
+        return conflicts;
     }
 
-    private static boolean contentDiffers(List<Entry> entries) {
+    private static boolean contentDiffers(List<IndexEntry> entries) {
         long first = entries.get(0).crcSize();
-        for (Entry entry : entries) {
+        for (IndexEntry entry : entries) {
             if (entry.crcSize() != first) {
                 return true;
             }

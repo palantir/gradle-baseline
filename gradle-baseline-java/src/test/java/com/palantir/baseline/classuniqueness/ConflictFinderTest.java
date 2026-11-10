@@ -19,6 +19,7 @@ package com.palantir.baseline.classuniqueness;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.baseline.classuniqueness.ClassIndex.ClassEntry;
+import com.palantir.baseline.classuniqueness.ConflictFinder.Conflict;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,7 +46,7 @@ class ConflictFinderTest {
         Jar first = jar("first", Map.of(FOO, "same"));
         Jar second = jar("second", Map.of(FOO, "same"));
 
-        assertThat(ConflictFinder.find(List.of(first, second)))
+        assertThat(conflictsFor(first, second))
                 .as("identical class files are interchangeable, so they are not a conflict")
                 .isEmpty();
     }
@@ -56,9 +57,9 @@ class ConflictFinderTest {
         Jar second = jar("second", Map.of(FOO, "one"));
         Jar third = jar("third", Map.of(FOO, "two"));
 
-        assertThat(ConflictFinder.find(List.of(first, second, third)))
+        assertThat(conflictsFor(first, second, third))
                 .as("a lock-file section names every jar with the class, including ones with identical copies")
-                .containsExactly(Map.entry(Set.of("first", "second", "third"), sorted(FOO_CLASS)));
+                .containsExactly(new Conflict(Set.of("first", "second", "third"), sorted(FOO_CLASS)));
     }
 
     @Test
@@ -67,10 +68,10 @@ class ConflictFinderTest {
         Jar second = jar("second", Map.of(FOO, "two", BAR, "two"));
         Jar third = jar("third", Map.of(BAR, "three"));
 
-        assertThat(ConflictFinder.find(List.of(first, second, third)))
+        assertThat(conflictsFor(first, second, third))
                 .containsOnly(
-                        Map.entry(Set.of("first", "second"), sorted(FOO_CLASS)),
-                        Map.entry(Set.of("first", "second", "third"), sorted(BAR_CLASS)));
+                        new Conflict(Set.of("first", "second"), sorted(FOO_CLASS)),
+                        new Conflict(Set.of("first", "second", "third"), sorted(BAR_CLASS)));
     }
 
     @Test
@@ -78,7 +79,7 @@ class ConflictFinderTest {
         Jar first = jar("same", Map.of(FOO, "one"));
         Jar second = jar("same", Map.of(FOO, "two"));
 
-        assertThat(ConflictFinder.find(List.of(first, second)))
+        assertThat(conflictsFor(first, second))
                 .as("jars are identified by their label, as the lock file shows them")
                 .isEmpty();
     }
@@ -91,9 +92,9 @@ class ConflictFinderTest {
                 List.of(new ClassEntry(collidingHash, 1, FOO_CLASS), new ClassEntry(collidingHash, 2, BAR_CLASS)));
         Jar second = jarWithEntries("second", List.of(new ClassEntry(collidingHash, 3, FOO_CLASS)));
 
-        assertThat(ConflictFinder.find(List.of(first, second)))
+        assertThat(conflictsFor(first, second))
                 .as("only Foo is in both jars; Bar merely shares its name hash")
-                .containsExactly(Map.entry(Set.of("first", "second"), sorted(FOO_CLASS)));
+                .containsExactly(new Conflict(Set.of("first", "second"), sorted(FOO_CLASS)));
     }
 
     @Test
@@ -106,9 +107,13 @@ class ConflictFinderTest {
                 "second",
                 List.of(new ClassEntry(collidingHash, 1, FOO_CLASS), new ClassEntry(collidingHash, 2, BAR_CLASS)));
 
-        assertThat(ConflictFinder.find(List.of(first, second)))
+        assertThat(conflictsFor(first, second))
                 .as("each class is identical across the jars; their checksums only differ from each other")
                 .isEmpty();
+    }
+
+    private static List<Conflict> conflictsFor(Jar... jars) throws IOException {
+        return ConflictFinder.find(List.of(jars));
     }
 
     private static SortedSet<String> sorted(String... names) {

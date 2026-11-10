@@ -19,6 +19,7 @@ package com.palantir.baseline.tasks;
 import com.google.common.base.Splitter;
 import com.palantir.baseline.classuniqueness.CheckedConfiguration;
 import com.palantir.baseline.classuniqueness.ConflictFinder;
+import com.palantir.baseline.classuniqueness.ConflictFinder.Conflict;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import difflib.DiffUtils;
@@ -30,7 +31,6 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -105,7 +105,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
         for (CheckedConfiguration configuration : getCheckedConfigurations().get()) {
             Instant before = Instant.now();
             List<Jar> jars = configuration.loadJars();
-            Map<Set<String>, SortedSet<String>> conflicts = ConflictFinder.find(jars);
+            List<Conflict> conflicts = ConflictFinder.find(jars);
             getLogger()
                     .info(
                             "Checked {} classes from {} dependencies for uniqueness ({}ms)",
@@ -133,9 +133,11 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
         }
     }
 
-    private static String lockFileSection(Map<Set<String>, SortedSet<String>> conflicts) {
+    private static String lockFileSection(List<Conflict> conflicts) {
         SortedMap<String, SortedSet<String>> classesByHeader = new TreeMap<>();
-        conflicts.forEach((jars, classes) -> classesByHeader.put(clashingJarHeader(jars), classes));
+        for (Conflict conflict : conflicts) {
+            classesByHeader.put(clashingJarHeader(conflict.jarLabels()), conflict.classNames());
+        }
         return classesByHeader.entrySet().stream()
                 .flatMap(entry -> Stream.concat(
                         Stream.of(entry.getKey()),
