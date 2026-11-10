@@ -42,4 +42,20 @@ final class TestJars {
         }
         return jar;
     }
+
+    /**
+     * Writes a malformed jar that contains the class file at {@code path} twice, with the given contents.
+     * ZipOutputStream refuses duplicate names, so this writes a second name of the same length and makes it equal in
+     * the raw bytes, which renames both its local header and its central directory entry.
+     */
+    static Path writeWithDuplicateEntry(Path dir, String name, String path, String firstContent, String secondContent)
+            throws IOException {
+        int lastChar = path.length() - ".class".length() - 1;
+        String otherPath =
+                path.substring(0, lastChar) + (path.charAt(lastChar) == 'x' ? 'y' : 'x') + path.substring(lastChar + 1);
+        Path jar = write(dir, name, Map.of(path, firstContent, otherPath, secondContent));
+        String bytes = new String(Files.readAllBytes(jar), StandardCharsets.ISO_8859_1);
+        Files.write(jar, bytes.replace(otherPath, path).getBytes(StandardCharsets.ISO_8859_1));
+        return jar;
+    }
 }

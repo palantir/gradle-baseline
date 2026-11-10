@@ -18,6 +18,7 @@ package com.palantir.baseline.classuniqueness;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.classuniqueness.ClassIndex.ClassEntry;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Conflict;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
@@ -43,8 +44,8 @@ class ConflictFinderTest {
 
     @Test
     void ignores_identical_copies() throws IOException {
-        Jar first = jar("first", Map.of(FOO, "same"));
-        Jar second = jar("second", Map.of(FOO, "same"));
+        Jar first = jar("first", ImmutableMap.of(FOO, "same"));
+        Jar second = jar("second", ImmutableMap.of(FOO, "same"));
 
         assertThat(conflictsFor(first, second))
                 .as("identical class files are interchangeable, so they are not a conflict")
@@ -53,9 +54,14 @@ class ConflictFinderTest {
 
     @Test
     void reports_differing_copies_against_every_jar_containing_the_class() throws IOException {
-        Jar first = jar("first", Map.of(FOO, "one", BAR, "bar"));
-        Jar second = jar("second", Map.of(FOO, "one"));
-        Jar third = jar("third", Map.of(FOO, "two"));
+        Jar first = jar(
+                "first",
+                ImmutableMap.<String, String>builder()
+                        .put(FOO, "one")
+                        .put(BAR, "bar")
+                        .buildOrThrow());
+        Jar second = jar("second", ImmutableMap.of(FOO, "one"));
+        Jar third = jar("third", ImmutableMap.of(FOO, "two"));
 
         assertThat(conflictsFor(first, second, third))
                 .as("a lock-file section names every jar with the class, including ones with identical copies")
@@ -64,9 +70,19 @@ class ConflictFinderTest {
 
     @Test
     void groups_classes_by_the_set_of_jars_containing_them() throws IOException {
-        Jar first = jar("first", Map.of(FOO, "one", BAR, "one"));
-        Jar second = jar("second", Map.of(FOO, "two", BAR, "two"));
-        Jar third = jar("third", Map.of(BAR, "three"));
+        Jar first = jar(
+                "first",
+                ImmutableMap.<String, String>builder()
+                        .put(FOO, "one")
+                        .put(BAR, "one")
+                        .buildOrThrow());
+        Jar second = jar(
+                "second",
+                ImmutableMap.<String, String>builder()
+                        .put(FOO, "two")
+                        .put(BAR, "two")
+                        .buildOrThrow());
+        Jar third = jar("third", ImmutableMap.of(BAR, "three"));
 
         assertThat(conflictsFor(first, second, third))
                 .containsOnly(
@@ -75,12 +91,34 @@ class ConflictFinderTest {
     }
 
     @Test
-    void ignores_differing_copies_in_jars_with_the_same_label() throws IOException {
-        Jar first = jar("same", Map.of(FOO, "one"));
-        Jar second = jar("same", Map.of(FOO, "two"));
+    void reports_every_class_the_same_jars_conflict_on_in_one_section() throws IOException {
+        Jar first = jar(
+                "first",
+                ImmutableMap.<String, String>builder()
+                        .put(FOO, "one")
+                        .put(BAR, "one")
+                        .buildOrThrow());
+        Jar second = jar(
+                "second",
+                ImmutableMap.<String, String>builder()
+                        .put(FOO, "two")
+                        .put(BAR, "two")
+                        .buildOrThrow());
 
         assertThat(conflictsFor(first, second))
-                .as("jars are identified by their label, as the lock file shows them")
+                .as("both classes conflict between the same two jars, so they share one lock-file section")
+                .containsExactly(new Conflict(Set.of("first", "second"), sorted(BAR_CLASS, FOO_CLASS)));
+    }
+
+    @Test
+    void ignores_differing_copies_within_one_label() throws IOException {
+        // Jars are identified by their label, as the lock file shows them. Besides a malformed jar like this one, two
+        // artifacts of one module can share a label, e.g. files that Gradle Module Metadata names without a
+        // classifier.
+        Jar malformed = jar("malformed", TestJars.writeWithDuplicateEntry(tempDir, "malformed", FOO, "one", "two"));
+
+        assertThat(conflictsFor(malformed))
+                .as("a jar with a class twice is warned about when it is indexed, not reported as a conflict")
                 .isEmpty();
     }
 
@@ -121,7 +159,10 @@ class ConflictFinderTest {
     }
 
     private Jar jar(String label, Map<String, String> entries) throws IOException {
-        Path jar = TestJars.write(tempDir, label, entries);
+        return jar(label, TestJars.write(tempDir, label, entries));
+    }
+
+    private Jar jar(String label, Path jar) throws IOException {
         Path indexFile = Files.createTempFile(tempDir, label, ".cui");
         ClassIndex.write(jar, indexFile);
         return new Jar(label, ClassIndex.read(indexFile));
