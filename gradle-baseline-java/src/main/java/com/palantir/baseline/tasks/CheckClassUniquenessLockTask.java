@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -104,7 +105,7 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
 
     @TaskAction
     public final void doIt() throws IOException {
-        SortedMap<String, String> conflictsByConfiguration = new TreeMap<>();
+        SortedMap<String, List<Conflict>> conflictsByConfigurationName = new TreeMap<>();
         for (CheckedConfiguration configuration : getCheckedConfigurations().get()) {
             Instant before = Instant.now();
             List<Jar> jars = configuration.loadJars();
@@ -116,24 +117,29 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                             jars.size(),
                             Duration.between(before, Instant.now()).toMillis());
             if (!conflicts.isEmpty()) {
-                conflictsByConfiguration.put(
-                        configuration.getConfigurationName().get(), lockFileSection(conflicts));
+                conflictsByConfigurationName.put(
+                        configuration.getConfigurationName().get(), conflicts);
             }
         }
 
-        if (conflictsByConfiguration.isEmpty()) {
+        if (conflictsByConfigurationName.isEmpty()) {
             // this is desirable because if means if people apply the plugin to lots of projects which are already
             // compliant, they don't get loads of noisy lockfiles created.
             ensureLockfileDoesNotExist();
         } else {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(HEADER);
-            conflictsByConfiguration.forEach((configuration, contents) -> {
-                stringBuilder.append("## ").append(configuration).append("\n");
-                stringBuilder.append(contents).append('\n');
-            });
-            ensureLockfileContains(stringBuilder.toString());
+            ensureLockfileContains(lockFileContents(conflictsByConfigurationName));
         }
+    }
+
+    private static String lockFileContents(SortedMap<String, List<Conflict>> conflictsByConfigurationName) {
+        StringBuilder contents = new StringBuilder(HEADER);
+        for (Map.Entry<String, List<Conflict>> configuration : conflictsByConfigurationName.entrySet()) {
+            String configurationName = configuration.getKey();
+            List<Conflict> conflicts = configuration.getValue();
+            contents.append("## ").append(configurationName).append('\n');
+            contents.append(lockFileSection(conflicts)).append('\n');
+        }
+        return contents.toString();
     }
 
     private static String lockFileSection(List<Conflict> conflicts) {
