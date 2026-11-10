@@ -385,6 +385,13 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
         and: "the transforms cache shares an index between projects: Gradle logs this line for each run of the transform"
         result.output.findAll(/Caching disabled for ClassIndexTransform: \S+\/${module}-1\.0\.jar because/).size() == 1
+
+        when:
+        BuildResult again = with('checkClassUniqueness', '--rerun-tasks', '--info').build()
+
+        then: "the transforms cache keeps the index for later builds, even though the transform isn't cacheable"
+        again.output.findAll(/Caching disabled for ClassIndexTransform: \S+\/${module}-1\.0\.jar because/).isEmpty()
+        again.task(':one:checkClassUniqueness').outcome == TaskOutcome.SUCCESS
     }
 
     def 'works with the configuration cache'() {

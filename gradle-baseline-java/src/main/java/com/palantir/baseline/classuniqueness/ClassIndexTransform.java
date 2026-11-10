@@ -29,17 +29,18 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
-/**
- * Writes the {@link ClassIndex} of a jar. Indexing is much faster than fetching the result from a remote build cache,
- * so this isn't cacheable: the local transforms cache already shares indexes between projects and builds.
- */
+/** Writes the {@link ClassIndex} of a jar. */
+@DisableCachingByDefault(
+        because = "Indexing a jar is faster than fetching its index from a remote build cache, and the local transforms"
+                + " cache already shares indexes between projects and builds")
 public abstract class ClassIndexTransform implements TransformAction<TransformParameters.None> {
     /** The artifact type of class indexes. */
     public static final String ARTIFACT_TYPE = "class-uniqueness-index";
 
     /** Appended to the jar's file name, which the check needs to recover the jar's classifier. */
-    static final String EXTENSION = ".cui";
+    private static final String EXTENSION = ".cui";
 
     private static final Logger log = Logging.getLogger(ClassIndexTransform.class);
 
@@ -64,12 +65,20 @@ public abstract class ClassIndexTransform implements TransformAction<TransformPa
         }
         if (!duplicates.isEmpty()) {
             log.warn(
-                    "Warning: Gradle Baseline found a dependency jar that contains more than one zip entry for "
-                            + "a class and is likely malformed: {}\n"
-                            + "The following entries appear multiple times: {}\n"
-                            + "This issue should be reported to the maintainer of the dependency.",
+                    """
+                    Warning: Gradle Baseline found a dependency jar that contains more than one zip entry for \
+                    a class and is likely malformed: {}
+                    The following entries appear multiple times: {}
+                    This issue should be reported to the maintainer of the dependency.\
+                    """,
                     jar.getName(),
                     duplicates);
         }
+    }
+
+    /** The name of the jar the given index was written for. */
+    static String jarFileName(File index) {
+        String indexName = index.getName();
+        return indexName.substring(0, indexName.length() - EXTENSION.length());
     }
 }

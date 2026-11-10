@@ -49,7 +49,12 @@ public abstract class CheckedConfiguration {
     @PathSensitive(PathSensitivity.NAME_ONLY)
     public abstract ConfigurableFileCollection getClassIndexes();
 
-    /** How the lock file shows each jar, in the same order as {@link #getClassIndexes()}. */
+    /**
+     * How the lock file shows each jar, such as {@code com.google.guava:guava} or {@code g:bar (classifier=tests)}, at
+     * the same position as the jar's index in {@link #getClassIndexes()}. The two are separate lists because Gradle
+     * tracks the indexes' content and the labels' values, and labels can't be keyed by file name: two jars can share
+     * one.
+     */
     @Input
     public abstract ListProperty<String> getJarLabels();
 
@@ -95,11 +100,11 @@ public abstract class CheckedConfiguration {
             Set<ResolvedArtifactResult> artifacts, Map<ComponentIdentifier, ModuleVersionIdentifier> coordinates) {
         return artifacts.stream()
                 .map(artifact -> {
-                    String indexName = artifact.getFile().getName();
-                    String jarName =
-                            indexName.substring(0, indexName.length() - ClassIndexTransform.EXTENSION.length());
+                    String jarName = ClassIndexTransform.jarFileName(artifact.getFile());
                     ModuleVersionIdentifier jarCoordinates =
                             coordinates.get(artifact.getId().getComponentIdentifier());
+                    // Gradle allows a component to have no module version (getModuleVersion() is nullable), though
+                    // modules and projects have one. Such a jar is shown by its file name.
                     return jarCoordinates == null ? jarName : JarLabels.label(jarCoordinates, jarName);
                 })
                 .toList();
