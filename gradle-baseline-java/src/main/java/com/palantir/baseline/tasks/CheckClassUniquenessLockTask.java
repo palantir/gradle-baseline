@@ -21,6 +21,7 @@ import com.palantir.baseline.classuniqueness.CheckedConfiguration;
 import com.palantir.baseline.classuniqueness.ConflictFinder;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Conflict;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
+import com.palantir.baseline.classuniqueness.JarLabel;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import difflib.DiffUtils;
 import difflib.Patch;
@@ -147,8 +148,8 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                 .joining("\n");
     }
 
-    private static String clashingJarHeader(Set<String> jarLabels) {
-        return jarLabels.stream().sorted().collect(Collectors.joining(", ", "[", "]"));
+    private static String clashingJarHeader(Set<JarLabel> jarLabels) {
+        return jarLabels.stream().map(JarLabel::value).sorted().collect(Collectors.joining(", ", "[", "]"));
     }
 
     private void ensureLockfileContains(String expected) {

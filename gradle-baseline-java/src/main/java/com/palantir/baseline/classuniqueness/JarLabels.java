@@ -31,17 +31,17 @@ import org.gradle.api.artifacts.result.DependencyResult;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 
-/** How the lock file shows a jar: {@code group:name}, followed by {@code  (classifier=...)} if it has one. */
+/** Works out a jar's {@link JarLabel} from its coordinates and file name. */
 final class JarLabels {
     private static final String SNAPSHOT = "SNAPSHOT";
 
     private JarLabels() {}
 
-    static String label(ModuleVersionIdentifier coordinates, String jarFileName) {
+    static JarLabel label(ModuleVersionIdentifier coordinates, String jarFileName) {
         String label = coordinates.getGroup() + ":" + coordinates.getName();
-        return classifier(coordinates.getName(), coordinates.getVersion(), jarFileName)
+        return new JarLabel(classifier(coordinates.getName(), coordinates.getVersion(), jarFileName)
                 .map(classifier -> label + " (classifier=" + classifier + ")")
-                .orElse(label);
+                .orElse(label));
     }
 
     /**

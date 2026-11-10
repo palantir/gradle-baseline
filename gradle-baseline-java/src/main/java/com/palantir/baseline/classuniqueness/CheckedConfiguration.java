@@ -56,7 +56,7 @@ public abstract class CheckedConfiguration {
      * one.
      */
     @Input
-    public abstract ListProperty<String> getJarLabels();
+    public abstract ListProperty<JarLabel> getJarLabels();
 
     public final void from(Configuration configuration) {
         // File dependencies are left out: they have no coordinates to show in the lock file.
@@ -83,7 +83,7 @@ public abstract class CheckedConfiguration {
     /** Loads the jars' indexes, minus the class names. */
     public final List<Jar> loadJars() throws IOException {
         List<File> indexFiles = List.copyOf(getClassIndexes().getFiles());
-        List<String> labels = getJarLabels().get();
+        List<JarLabel> labels = getJarLabels().get();
         if (indexFiles.size() != labels.size()) {
             throw new IllegalStateException(String.format(
                     "Expected a label for each of the %d class indexes of %s, but found %d",
@@ -96,7 +96,7 @@ public abstract class CheckedConfiguration {
         return jars;
     }
 
-    private static List<String> labels(
+    private static List<JarLabel> labels(
             Set<ResolvedArtifactResult> artifacts, Map<ComponentIdentifier, ModuleVersionIdentifier> coordinates) {
         return artifacts.stream()
                 .map(artifact -> {
@@ -105,7 +105,7 @@ public abstract class CheckedConfiguration {
                             coordinates.get(artifact.getId().getComponentIdentifier());
                     // Gradle allows a component to have no module version (getModuleVersion() is nullable), though
                     // modules and projects have one. Such a jar is shown by its file name.
-                    return jarCoordinates == null ? jarName : JarLabels.label(jarCoordinates, jarName);
+                    return jarCoordinates == null ? new JarLabel(jarName) : JarLabels.label(jarCoordinates, jarName);
                 })
                 .toList();
     }

@@ -25,11 +25,13 @@ import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -65,7 +67,7 @@ class ConflictFinderTest {
 
         assertThat(conflictsFor(first, second, third))
                 .as("a lock-file section names every jar with the class, including ones with identical copies")
-                .containsExactly(new Conflict(Set.of("first", "second", "third"), sorted(FOO_CLASS)));
+                .containsExactly(new Conflict(labels("first", "second", "third"), sorted(FOO_CLASS)));
     }
 
     @Test
@@ -86,8 +88,8 @@ class ConflictFinderTest {
 
         assertThat(conflictsFor(first, second, third))
                 .containsOnly(
-                        new Conflict(Set.of("first", "second"), sorted(FOO_CLASS)),
-                        new Conflict(Set.of("first", "second", "third"), sorted(BAR_CLASS)));
+                        new Conflict(labels("first", "second"), sorted(FOO_CLASS)),
+                        new Conflict(labels("first", "second", "third"), sorted(BAR_CLASS)));
     }
 
     @Test
@@ -107,7 +109,7 @@ class ConflictFinderTest {
 
         assertThat(conflictsFor(first, second))
                 .as("both classes conflict between the same two jars, so they share one lock-file section")
-                .containsExactly(new Conflict(Set.of("first", "second"), sorted(BAR_CLASS, FOO_CLASS)));
+                .containsExactly(new Conflict(labels("first", "second"), sorted(BAR_CLASS, FOO_CLASS)));
     }
 
     @Test
@@ -132,7 +134,7 @@ class ConflictFinderTest {
 
         assertThat(conflictsFor(first, second))
                 .as("only Foo is in both jars; Bar merely shares its name hash")
-                .containsExactly(new Conflict(Set.of("first", "second"), sorted(FOO_CLASS)));
+                .containsExactly(new Conflict(labels("first", "second"), sorted(FOO_CLASS)));
     }
 
     @Test
@@ -154,6 +156,10 @@ class ConflictFinderTest {
         return ConflictFinder.find(List.of(jars));
     }
 
+    private static Set<JarLabel> labels(String... labels) {
+        return Arrays.stream(labels).map(JarLabel::new).collect(Collectors.toSet());
+    }
+
     private static SortedSet<String> sorted(String... names) {
         return new TreeSet<>(List.of(names));
     }
@@ -165,12 +171,12 @@ class ConflictFinderTest {
     private Jar jar(String label, Path jar) throws IOException {
         Path indexFile = Files.createTempFile(tempDir, label, ".cui");
         ClassIndex.write(jar, indexFile);
-        return new Jar(label, ClassIndex.read(indexFile));
+        return new Jar(new JarLabel(label), ClassIndex.read(indexFile));
     }
 
     private Jar jarWithEntries(String label, List<ClassEntry> entries) throws IOException {
         Path indexFile = Files.createTempFile(tempDir, label, ".cui");
         ClassIndex.writeEntries(entries, indexFile);
-        return new Jar(label, ClassIndex.read(indexFile));
+        return new Jar(new JarLabel(label), ClassIndex.read(indexFile));
     }
 }

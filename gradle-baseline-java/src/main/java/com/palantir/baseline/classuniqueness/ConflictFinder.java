@@ -34,13 +34,13 @@ public final class ConflictFinder {
     private ConflictFinder() {}
 
     /** A jar on the classpath: how it is shown in the lock file, and its index. */
-    public record Jar(String label, ClassIndex index) {}
+    public record Jar(JarLabel label, ClassIndex index) {}
 
     /**
      * Classes that all the given jars contain, with differing content in at least two of them: one section of the lock
      * file.
      */
-    public record Conflict(Set<String> jarLabels, SortedSet<String> classNames) {}
+    public record Conflict(Set<JarLabel> jarLabels, SortedSet<String> classNames) {}
 
     /** One class in a jar's index, without its name: its position in that index, and its content checksum. */
     private record IndexEntry(Jar jar, int position, long crcAndSize) {}
@@ -151,11 +151,11 @@ public final class ConflictFinder {
                     .computeIfAbsent(named.name(), _name -> new ArrayList<>())
                     .add(named.entry());
         }
-        Map<Set<String>, SortedSet<String>> classNamesByJarLabels = new HashMap<>();
+        Map<Set<JarLabel>, SortedSet<String>> classNamesByJarLabels = new HashMap<>();
         for (Map.Entry<String, List<IndexEntry>> sameName : entriesByName.entrySet()) {
             String name = sameName.getKey();
             List<IndexEntry> entries = sameName.getValue();
-            Set<String> jarLabels = new HashSet<>();
+            Set<JarLabel> jarLabels = new HashSet<>();
             for (IndexEntry entry : entries) {
                 jarLabels.add(entry.jar().label());
             }
@@ -166,8 +166,8 @@ public final class ConflictFinder {
             }
         }
         List<Conflict> conflicts = new ArrayList<>(classNamesByJarLabels.size());
-        for (Map.Entry<Set<String>, SortedSet<String>> sameJars : classNamesByJarLabels.entrySet()) {
-            Set<String> jarLabels = sameJars.getKey();
+        for (Map.Entry<Set<JarLabel>, SortedSet<String>> sameJars : classNamesByJarLabels.entrySet()) {
+            Set<JarLabel> jarLabels = sameJars.getKey();
             SortedSet<String> classNames = sameJars.getValue();
             conflicts.add(new Conflict(jarLabels, classNames));
         }
