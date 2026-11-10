@@ -32,9 +32,10 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.work.DisableCachingByDefault;
 
 /** Writes the {@link ClassIndex} of a jar. */
-@DisableCachingByDefault(
-        because = "Indexing a jar is faster than fetching its index from a remote build cache, and the local transforms"
-                + " cache already shares indexes between projects and builds")
+@DisableCachingByDefault(because = """
+    Indexing a jar is faster than fetching its index from a remote build cache, and the local transforms \
+    cache already shares indexes between projects and builds\
+    """)
 public abstract class ClassIndexTransform implements TransformAction<TransformParameters.None> {
     /** The artifact type of class indexes. */
     public static final String ARTIFACT_TYPE = "class-uniqueness-index";
