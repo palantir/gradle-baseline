@@ -27,6 +27,9 @@ import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
+    private static final String FOO_CLASS = 'com.example.Foo'
+    private static final String FOO_CLASS_FILE = 'com/example/Foo.class'
+
     def standardBuildFile = """
         plugins {
             id 'java-library'
@@ -448,9 +451,6 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         then:
         with('checkClassUniqueness').buildAndFail().output.contains("[javax.el:javax.el-api, javax.servlet.jsp:jsp-api]")
     }
-
-    private static final String FOO_CLASS = 'com.example.Foo'
-    private static final String FOO_CLASS_FILE = 'com/example/Foo.class'
 
     private static String lockFile(String configuration, String jars, String className) {
         return """\
