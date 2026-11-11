@@ -152,6 +152,8 @@ The plugin surfaces failures using JUnit XML which is rendered nicely by CircleC
 1. Storing JUnit test reports in `$CIRCLE_TEST_REPORTS/junit`
 2. Storeing the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
 
+Since [Gradle 9.3](https://docs.gradle.org/9.3.0/release-notes.html#test-reporting-improvements), HTML test reports can contain a file per test, which can make uploading artifacts slow. Set `com.palantir.baseline-circleci.html-test-reports-failed-only=true` in gradle.properties to only store the HTML reports of `Test` tasks with failing tests.
+
 ## com.palantir.baseline-format
 
 Adds a `./gradlew format` task which autoformats all Java files using [Spotless](https://github.com/diffplug/spotless). Roughly equivalent to:
