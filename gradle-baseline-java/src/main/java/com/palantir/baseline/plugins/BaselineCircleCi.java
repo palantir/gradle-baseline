@@ -51,25 +51,28 @@ public final class BaselineCircleCi implements Plugin<Project> {
     }
 
     private void configurePluginsForArtifacts(Project project, EnvironmentVariables environmentVariables) {
-        String circleArtifactsDir = environmentVariables
-                .envVarOrFromTestingProperty("CIRCLE_ARTIFACTS")
+        String htmlReportsDir = environmentVariables
+                .envVarOrFromTestingProperty("CIRCLE_HTML_TEST_REPORTS")
+                .orElse(environmentVariables.envVarOrFromTestingProperty("CIRCLE_ARTIFACTS"))
                 .getOrNull();
 
-        if (circleArtifactsDir == null) {
-            project.getLogger().info("$CIRCLE_ARTIFACTS variable is not set, not configuring junit/profiling reports");
+        if (htmlReportsDir == null) {
+            project.getLogger()
+                    .info("Neither $CIRCLE_HTML_TEST_REPORTS nor $CIRCLE_ARTIFACTS variables are set, not"
+                            + " configuring junit/profiling reports");
             return;
         }
 
         try {
-            createDirectories(Paths.get(circleArtifactsDir));
+            createDirectories(Paths.get(htmlReportsDir));
         } catch (IOException e) {
-            throw new UncheckedIOException("failed to create CIRCLE_ARTIFACTS directory", e);
+            throw new UncheckedIOException("failed to create html reports directory", e);
         }
 
         project.getRootProject()
                 .allprojects(proj -> proj.getTasks().withType(Test.class).configureEach(test -> {
                     test.getReports().getHtml().getRequired().set(true);
-                    test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
+                    test.getReports().getHtml().getOutputLocation().set(junitPath(htmlReportsDir, test.getPath()));
                 }));
     }
 
