@@ -24,7 +24,7 @@ import org.gradle.util.GradleVersion;
 
 /** A Plugin that configures a project with all Baseline settings. */
 public final class Baseline implements Plugin<Project> {
-    public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.0");
+    public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.6");
 
     @Override
     public void apply(Project project) {
