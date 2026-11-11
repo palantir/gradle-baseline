@@ -46,7 +46,7 @@ public final class ConflictFinder {
     private record IndexEntry(Jar jar, int position, long crcAndSize) {}
 
     /** An index entry once its class name has been read. */
-    private record NamedEntry(IndexEntry entry, String name) {}
+    private record NamedEntry(IndexEntry entry, String className) {}
 
     public static List<Conflict> find(List<Jar> classpath) throws IOException {
         return conflicts(readNames(candidates(classpath)));
@@ -145,15 +145,15 @@ public final class ConflictFinder {
      * grouped by their name rather than their name hash, as distinct names can, rarely, have equal hashes.
      */
     private static List<Conflict> conflicts(List<NamedEntry> namedEntries) {
-        Map<String, List<IndexEntry>> entriesByName = new HashMap<>();
+        Map<String, List<IndexEntry>> entriesByClassName = new HashMap<>();
         for (NamedEntry named : namedEntries) {
-            entriesByName
-                    .computeIfAbsent(named.name(), _name -> new ArrayList<>())
+            entriesByClassName
+                    .computeIfAbsent(named.className(), _className -> new ArrayList<>())
                     .add(named.entry());
         }
         Map<Set<JarLabel>, SortedSet<String>> classNamesByJarLabels = new HashMap<>();
-        for (Map.Entry<String, List<IndexEntry>> sameName : entriesByName.entrySet()) {
-            String name = sameName.getKey();
+        for (Map.Entry<String, List<IndexEntry>> sameName : entriesByClassName.entrySet()) {
+            String className = sameName.getKey();
             List<IndexEntry> entries = sameName.getValue();
             Set<JarLabel> jarLabels = new HashSet<>();
             for (IndexEntry entry : entries) {
@@ -162,7 +162,7 @@ public final class ConflictFinder {
             if (jarLabels.size() > 1 && contentDiffers(entries)) {
                 classNamesByJarLabels
                         .computeIfAbsent(jarLabels, _jarLabels -> new TreeSet<>())
-                        .add(name);
+                        .add(className);
             }
         }
         List<Conflict> conflicts = new ArrayList<>(classNamesByJarLabels.size());
