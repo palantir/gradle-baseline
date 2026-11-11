@@ -76,10 +76,20 @@ class BaselineCircleCiJavaIntegrationTests {
     }
 
     @Test
-    void can_call_gradle_three_times_in_a_row(GradleInvoker gradle) {
-        runWithReportsDir(gradle, "dependencies").buildsSuccessfully();
-        runWithReportsDir(gradle, "compileJava").buildsSuccessfully();
-        runWithReportsDir(gradle, "compileTestJava").buildsSuccessfully();
+    void html_reports_written_to_circle_html_test_reports(GradleInvoker gradle, RootProject rootProject) {
+        writeFailingTest(rootProject);
+        Path htmlReportsDir = rootProject.path().resolve("circle/html-reports");
+        Path artifactsDir = rootProject.path().resolve("circle/artifacts");
+
+        gradle.with(Options.builder()
+                        .addArgs("test")
+                        .putTestingEnvironmentVariables("CIRCLE_HTML_TEST_REPORTS", htmlReportsDir.toString())
+                        .putTestingEnvironmentVariables("CIRCLE_ARTIFACTS", artifactsDir.toString())
+                        .build())
+                .buildsWithFailure();
+
+        assertThat(htmlReportsDir.resolve("junit/test/index.html")).isRegularFile();
+        assertThat(artifactsDir.resolve("junit")).doesNotExist();
     }
 
     private GradleInvocation runWithReportsDir(GradleInvoker gradle, String task) {
