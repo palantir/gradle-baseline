@@ -88,8 +88,12 @@ class BaselineCircleCiJavaIntegrationTests {
                         .build())
                 .buildsWithFailure();
 
-        assertThat(htmlReportsDir.resolve("junit/test/index.html")).isRegularFile();
-        assertThat(artifactsDir.resolve("junit")).doesNotExist();
+        assertThat(htmlReportsDir.resolve("junit/test/index.html"))
+                .as("HTML test report should be written to $CIRCLE_HTML_TEST_REPORTS")
+                .isRegularFile();
+        assertThat(artifactsDir.resolve("junit"))
+                .as("HTML test report should not be written to $CIRCLE_ARTIFACTS when $CIRCLE_HTML_TEST_REPORTS is set")
+                .doesNotExist();
     }
 
     private GradleInvocation runWithReportsDir(GradleInvoker gradle, String task) {
