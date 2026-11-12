@@ -15,112 +15,133 @@
  */
 package com.palantir.baseline;
 
+import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import com.palantir.gradle.testing.execution.GradleInvocation;
+import com.palantir.gradle.testing.execution.GradleInvoker;
+import com.palantir.gradle.testing.execution.InvocationResult;
+import com.palantir.gradle.testing.execution.Options;
+import com.palantir.gradle.testing.junit.GradlePluginTests;
+import com.palantir.gradle.testing.project.GradleProject;
+import com.palantir.gradle.testing.project.RootProject;
+import com.palantir.gradle.testing.project.SubProject;
+import java.nio.file.Path;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class BaselineCircleCiJavaIntegrationTests {
-    @Rule
-    public final TemporaryFolder projectDir = new TemporaryFolder();
+@GradlePluginTests
+class BaselineCircleCiJavaIntegrationTests {
 
-    private File reportsDir;
+    private Path reportsDir;
 
-    @Before
-    public void before() throws IOException {
-        reportsDir = new File(projectDir.getRoot(), "circle/reports");
+    @BeforeEach
+    void setup(RootProject rootProject, SubProject subProject) {
+        reportsDir = rootProject.path().resolve("circle/reports");
 
-        java.nio.file.Files.writeString(
-                projectDir.newFile("gradle.properties").toPath(), """
-                    __TESTING=true
-                    __TESTING_CIRCLE_TEST_REPORTS=%s
-                    """.formatted(reportsDir.toString()));
+        rootProject.buildGradle().plugins().add("java").add("com.palantir.baseline-circleci");
+        subProject.buildGradle().plugins().add("java");
+        for (GradleProject project : new GradleProject[] {rootProject, subProject}) {
+            project.buildGradle().append("""
+                repositories {
+                    mavenCentral()
+                }
 
-        copyTestFile("build.gradle", projectDir, "build.gradle");
-        copyTestFile("subproject.gradle", projectDir, "subproject/build.gradle");
-        copyTestFile("settings.gradle", projectDir, "settings.gradle");
-        copyTestFile("checkstyle.xml", projectDir, "config/checkstyle/checkstyle.xml");
-    }
-
-    @Test
-    public void junitIntegrationTest() throws IOException {
-        copyTestFile("tested-class", projectDir, "src/main/java/com/example/MyClass.java");
-        copyTestFile("tested-class-tests", projectDir, "src/test/java/com/example/MyClassTests.java");
-
-        BuildResult result = GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "test")
-                .buildAndFail();
-        assertThat(result.getOutput()).contains("2 tests completed, 1 failed");
-
-        File report = new File(reportsDir, "junit/test/TEST-com.example.MyClassTests.xml");
-        assertThat(report).exists();
-        String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
-        assertThat(reportXml)
-                .contains("tests=\"2\"")
-                .contains("failures=\"1\"")
-                .contains("org.junit.ComparisonFailure");
-    }
-
-    @Test
-    public void junitSubprojectIntegrationTest() throws IOException {
-        copyTestFile("tested-class", projectDir, "subproject/src/main/java/com/example/MyClass.java");
-        copyTestFile("tested-class-tests", projectDir, "subproject/src/test/java/com/example/MyClassTests.java");
-
-        BuildResult result = GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "subproject:test")
-                .buildAndFail();
-        assertThat(result.getOutput()).contains("2 tests completed, 1 failed");
-
-        File report = new File(reportsDir, "junit/subproject/test/TEST-com.example.MyClassTests.xml");
-        assertThat(report).exists();
-        String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
-        assertThat(reportXml)
-                .contains("tests=\"2\"")
-                .contains("failures=\"1\"")
-                .contains("org.junit.ComparisonFailure");
-    }
-
-    @Test
-    public void canCallGradleThreeTimesInARow() {
-        GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "dependencies")
-                .build();
-        GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "compileJava")
-                .build();
-        GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "compileTestJava")
-                .build();
-    }
-
-    private static void copyTestFile(String source, TemporaryFolder root, String target) {
-        File targetFile = new File(root.getRoot(), target);
-        targetFile.getParentFile().mkdirs();
-        try (OutputStream stream = new FileOutputStream(targetFile)) {
-            Resources.copy(Resources.getResource(BaselineCircleCiJavaIntegrationTests.class, source), stream);
-        } catch (IOException e) {
-            throw new AssertionError(e);
+                dependencies {
+                    testImplementation 'junit:junit:4.13.2'
+                    testImplementation 'org.assertj:assertj-core:3.27.3'
+                }
+                """);
         }
+    }
+
+    @Test
+    void junit_integration_test(GradleInvoker gradle, RootProject rootProject) {
+        writeFailingTest(rootProject);
+
+        InvocationResult result = runWithReportsDir(gradle, "test").buildsWithFailure();
+
+        assertThat(result).output().contains("2 tests completed, 1 failed");
+        assertReport(reportsDir.resolve("junit/test/TEST-com.example.MyClassTests.xml"));
+    }
+
+    @Test
+    void junit_subproject_integration_test(GradleInvoker gradle, SubProject subProject) {
+        writeFailingTest(subProject);
+
+        InvocationResult result = runWithReportsDir(gradle, ":subProject:test").buildsWithFailure();
+
+        assertThat(result).output().contains("2 tests completed, 1 failed");
+        assertReport(reportsDir.resolve("junit/subProject/test/TEST-com.example.MyClassTests.xml"));
+    }
+
+    @Test
+    void html_reports_written_to_circle_html_test_reports(GradleInvoker gradle, RootProject rootProject) {
+        writeFailingTest(rootProject);
+        Path htmlReportsDir = rootProject.path().resolve("circle/html-reports");
+        Path artifactsDir = rootProject.path().resolve("circle/artifacts");
+
+        gradle.with(Options.builder()
+                        .addArgs("test")
+                        .putTestingEnvironmentVariables("CIRCLE_HTML_TEST_REPORTS", htmlReportsDir.toString())
+                        .putTestingEnvironmentVariables("CIRCLE_ARTIFACTS", artifactsDir.toString())
+                        .build())
+                .buildsWithFailure();
+
+        assertThat(htmlReportsDir.resolve("junit/test/index.html"))
+                .as("HTML test report should be written to $CIRCLE_HTML_TEST_REPORTS")
+                .isRegularFile();
+        assertThat(artifactsDir.resolve("junit"))
+                .as("HTML test report should not be written to $CIRCLE_ARTIFACTS when $CIRCLE_HTML_TEST_REPORTS is set")
+                .doesNotExist();
+    }
+
+    private GradleInvocation runWithReportsDir(GradleInvoker gradle, String task) {
+        return gradle.with(Options.builder()
+                .addArgs(task)
+                .putTestingEnvironmentVariables("CIRCLE_TEST_REPORTS", reportsDir.toString())
+                .build());
+    }
+
+    private static void writeFailingTest(GradleProject project) {
+        project.mainSourceSet().java().writeClass("""
+            package com.example;
+
+            public class MyClass {
+                public static int doubleIt(int input) {
+                    return 4;
+                }
+
+                private MyClass() {}
+            }
+            """);
+        project.testSourceSet().java().writeClass("""
+            package com.example;
+
+            import static org.assertj.core.api.Assertions.assertThat;
+
+            import org.junit.Test;
+
+            public class MyClassTests {
+                @Test
+                public void doublesTwo() {
+                    assertThat(MyClass.doubleIt(2)).isEqualTo(4);
+                }
+
+                @Test
+                public void doublesThree() {
+                    assertThat(MyClass.doubleIt(3)).isEqualTo(6);
+                }
+            }
+            """);
+    }
+
+    private static void assertReport(Path report) {
+        assertThat(report)
+                .isRegularFile()
+                .content()
+                .contains("tests=\"2\"")
+                .contains("failures=\"1\"")
+                .contains("org.junit.ComparisonFailure");
     }
 }
