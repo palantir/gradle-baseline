@@ -142,9 +142,11 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                     projectPath,
                                     manifest,
                                     ENABLE_PREVIEW_ATTRIBUTE,
-                                    extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
-                                            .map(v -> Integer.toString(v.asInt()))
-                                            .collect(Collectors.toSet())));
+                                    extension
+                                            .getEnablePreview()
+                                            .map(maybeVersion -> maybeVersion.stream()
+                                                    .map(v -> Integer.toString(v.asInt()))
+                                                    .collect(Collectors.toSet())));
                         }
                     });
                 }

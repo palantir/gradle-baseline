@@ -30,8 +30,9 @@ public final class BaselineJavaCompilerHeap implements Plugin<Project> {
 
     @Override
     public void apply(Project proj) {
-        proj.afterEvaluate(
-                project -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
+        proj.afterEvaluate(project -> project.getTasks()
+                .withType(JavaCompile.class)
+                .configureEach(javaCompileTask -> {
                     ForkOptions options = javaCompileTask.getOptions().getForkOptions();
                     if (options.getMemoryMaximumSize() == null) {
                         options.setMemoryMaximumSize(JAVAC_HEAP);

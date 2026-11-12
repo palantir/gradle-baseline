@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import java.util.Collections;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -144,55 +145,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     .getRelease()
                     // The `.zip(javaCompiler` here ensures that release will be set if and only if javaCompiler
                     // property was set. If it was not set, we use the old behaviour of not setting release.
-                    .set(target.map(ChosenJavaVersion::asMajorVersion).zip(javaCompiler, (targetValue, _ignored) -> {
-                        // Javac does not allow `--add-exports` and `--release` to be used together. This is
-                        // problematic, as quite a lot of code we write (especially compiler plugins like
-                        // error-prone checks or palantir-java-format) need to use `--add-exports`. But alas, there's no
-                        // way to circumvent this (read more at https://github.com/palantir/gradle-baseline/pull/3376).
-
-                        // So we drop the `--release` flag if `--add-exports` is used, by making the value of this
-                        // release property null, aka unset.
-
-                        // The downside of not using `--release` is that if people use a JDK api that is newer than the
-                        // compilation target, the compilation will succeed rather than fail. Mitigating factors are:
-                        //   * IntelliJ still red-underlines the API usage, even if compilation succeeds
-                        //   * Relatively few repos need `--add-exports` (<100 as of writing) and they are mainly
-                        //     owned by the Java infrastructure teams rather than regular developers.
-                        // So this risk *should* be manageable.
-
-                        // In an ideal world, we'd check the `options.allCompilerArgs` in here to see if
-                        // `--add-exports` is added. This means even if some external gradle plugin or some tool that
-                        // *isn't* our baseline-module-jvm-args plugin added an `--add-exports` for compilation,
-                        // we'd correctly remove `--release`. However, the lazy `CommandLinkArgumentProviders` that
-                        // make up the `options.allCompilerArgs` may do resolution (eg BaselineImmutables does so)
-                        // and other complex actions. Since Gradle do not provide us with a `Provider` for these
-                        // compiler args, everything goes askew and Gradle ends up complaining about "not having
-                        // the project state lock". So instead of doing the completely correct general approach, we
-                        // assume that people will only use our baseline-module-jvm-args plugin to add `--add-exports`,
-                        // and look directly at its extension to see if any exports/opens are added. This does mean
-                        // though if `--add-exports` are added another way, `--release` will remain and the compiler
-                        // will complain:
-                        //    error: exporting a package from system module jdk.compiler is not allowed with --release
-                        // In this situation, the user will need to manually unset the release property in
-                        // the buildscript: `tasks.withType(JavaCompile).configureEach { options.release.unset() }`
-                        BaselineModuleJvmArgsExtension moduleJvmArgs =
-                                project.getExtensions().findByType(BaselineModuleJvmArgsExtension.class);
-
-                        if (moduleJvmArgs == null) {
-                            return targetValue;
-                        }
-
-                        boolean anyExports = !Sets.union(
-                                        moduleJvmArgs.exports().get(),
-                                        moduleJvmArgs.opens().get())
-                                .isEmpty();
-
-                        if (anyExports) {
-                            return null;
-                        }
-
-                        return targetValue;
-                    }));
+                    .set(target.map(ChosenJavaVersion::asMajorVersion)
+                            .zip(
+                                    javaCompiler,
+                                    (targetValue, _ignored) -> releaseUnlessAddExportsUsed(project, targetValue)));
         });
 
         // Unfortunately, Gradle does not provide a Property based API for source and target compatibility,
@@ -237,13 +193,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             // set high compared to the target version.
             Provider<ChosenJavaVersion> checkstyleJavaVersion =
                     javaCompiler.map(ChosenJavaVersion::of).orElse(target);
-            project.getTasks().withType(Checkstyle.class).configureEach(checkstyle -> checkstyle
-                    .getJavaLauncher()
-                    .set(getJavaLauncher(
-                            rootExtension,
-                            baselineConfiguredJavaToolchains,
-                            javaToolchainService,
-                            checkstyleJavaVersion)));
+            project.getTasks()
+                    .withType(Checkstyle.class)
+                    .configureEach(checkstyle -> checkstyle
+                            .getJavaLauncher()
+                            .set(getJavaLauncher(
+                                    rootExtension,
+                                    baselineConfiguredJavaToolchains,
+                                    javaToolchainService,
+                                    checkstyleJavaVersion)));
         }
 
         project.getTasks().withType(GroovyCompile.class).configureEach(groovyCompileTask -> {
@@ -271,8 +229,61 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             scalaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
         });
 
-        project.getTasks().withType(ScalaDoc.class).configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
-                .set(getJavaLauncher(rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
+        project.getTasks()
+                .withType(ScalaDoc.class)
+                .configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
+                        .set(getJavaLauncher(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
+    }
+
+    @Nullable
+    private static Integer releaseUnlessAddExportsUsed(Project project, Integer targetValue) {
+        // Javac does not allow `--add-exports` and `--release` to be used together. This is
+        // problematic, as quite a lot of code we write (especially compiler plugins like
+        // error-prone checks or palantir-java-format) need to use `--add-exports`. But alas, there's no
+        // way to circumvent this (read more at https://github.com/palantir/gradle-baseline/pull/3376).
+
+        // So we drop the `--release` flag if `--add-exports` is used, by making the value of this
+        // release property null, aka unset.
+
+        // The downside of not using `--release` is that if people use a JDK api that is newer than the
+        // compilation target, the compilation will succeed rather than fail. Mitigating factors are:
+        //   * IntelliJ still red-underlines the API usage, even if compilation succeeds
+        //   * Relatively few repos need `--add-exports` (<100 as of writing) and they are mainly
+        //     owned by the Java infrastructure teams rather than regular developers.
+        // So this risk *should* be manageable.
+
+        // In an ideal world, we'd check the `options.allCompilerArgs` in here to see if
+        // `--add-exports` is added. This means even if some external gradle plugin or some tool that
+        // *isn't* our baseline-module-jvm-args plugin added an `--add-exports` for compilation,
+        // we'd correctly remove `--release`. However, the lazy `CommandLinkArgumentProviders` that
+        // make up the `options.allCompilerArgs` may do resolution (eg BaselineImmutables does so)
+        // and other complex actions. Since Gradle do not provide us with a `Provider` for these
+        // compiler args, everything goes askew and Gradle ends up complaining about "not having
+        // the project state lock". So instead of doing the completely correct general approach, we
+        // assume that people will only use our baseline-module-jvm-args plugin to add `--add-exports`,
+        // and look directly at its extension to see if any exports/opens are added. This does mean
+        // though if `--add-exports` are added another way, `--release` will remain and the compiler
+        // will complain:
+        //    error: exporting a package from system module jdk.compiler is not allowed with --release
+        // In this situation, the user will need to manually unset the release property in
+        // the buildscript: `tasks.withType(JavaCompile).configureEach { options.release.unset() }`
+        BaselineModuleJvmArgsExtension moduleJvmArgs =
+                project.getExtensions().findByType(BaselineModuleJvmArgsExtension.class);
+
+        if (moduleJvmArgs == null) {
+            return targetValue;
+        }
+
+        boolean anyExports = !Sets.union(
+                        moduleJvmArgs.exports().get(), moduleJvmArgs.opens().get())
+                .isEmpty();
+
+        if (anyExports) {
+            return null;
+        }
+
+        return targetValue;
     }
 
     private static void configureExecutionTasks(
@@ -313,8 +324,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             return;
         }
         log.debug("Using detected javaToolchains to configure the javaCompileTask");
-        javaCompileTask.getJavaCompiler().set(javaToolchainService.compilerFor(spec -> spec.getLanguageVersion()
-                .set(javaCompilerVersion)));
+        javaCompileTask
+                .getJavaCompiler()
+                .set(javaToolchainService.compilerFor(
+                        spec -> spec.getLanguageVersion().set(javaCompilerVersion)));
     }
 
     private static void setJavaDocTool(
@@ -333,8 +346,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             return;
         }
         log.debug("Using detected javaToolchains to configure javaDocTool");
-        javadocTask.getJavadocTool().set(javaToolchainService.javadocToolFor(spec -> spec.getLanguageVersion()
-                .set(version.map(ChosenJavaVersion::javaLanguageVersion))));
+        javadocTask
+                .getJavadocTool()
+                .set(javaToolchainService.javadocToolFor(
+                        spec -> spec.getLanguageVersion().set(version.map(ChosenJavaVersion::javaLanguageVersion))));
     }
 
     private static Provider<JavaLauncher> getJavaLauncher(
