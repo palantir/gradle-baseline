@@ -360,6 +360,85 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         lockfile.text == lockFile('runtimeClasspath', '[g:lib-2, g:lib-2 (classifier=jdk-2)]', FOO_CLASS)
     }
 
+    def 'checks jars that a POM depends on with type test-jar'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        writeJar('repo/g/lib/1.0/lib-1.0-tests.jar', [(FOO_CLASS_FILE): 'tests'])
+        writePom('g', 'lib', '1.0', 'repo/g/lib/1.0/lib-1.0.pom')
+        writeJar('repo/g/consumer/1.0/consumer-1.0.jar', [:])
+        writePom('g', 'consumer', '1.0', 'repo/g/consumer/1.0/consumer-1.0.pom', '''\
+            <dependencies><dependency><groupId>g</groupId><artifactId>lib</artifactId><version>1.0</version>
+            <type>test-jar</type></dependency></dependencies>
+            '''.stripIndent())
+        writeOtherModule()
+
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            maven { url = uri('repo') }
+        }
+        dependencies {
+            api 'g:consumer:1.0'
+            api 'g:other:1.0'
+        }
+        """.stripIndent()
+        with('checkClassUniqueness', '--fix').build()
+
+        then: "Gradle gives the tests jar the artifact type test-jar, from the consumer's POM"
+        lockfile.text == lockFile('runtimeClasspath', '[g:lib (classifier=tests), g:other]', FOO_CLASS)
+    }
+
+    def 'checks jars of modules with a packaging Gradle does not know'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        writeJar('repo/g/component/1.0/component-1.0.jar', [(FOO_CLASS_FILE): 'component'])
+        writePom('g', 'component', '1.0', 'repo/g/component/1.0/component-1.0.pom',
+                '<packaging>takari-maven-component</packaging>')
+        writeOtherModule()
+
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            maven { url = uri('repo') }
+        }
+        dependencies {
+            api 'g:component:1.0'
+            api 'g:other:1.0'
+        }
+        """.stripIndent()
+        with('checkClassUniqueness', '--fix').build()
+
+        then: "Gradle gives the jar the artifact type takari-maven-component, from its packaging"
+        lockfile.text == lockFile('runtimeClasspath', '[g:component, g:other]', FOO_CLASS)
+    }
+
+    def 'ignores artifacts that are not jars'() {
+        when:
+        writeJar('repo/g/archive/1.0/archive-1.0.zip', [(FOO_CLASS_FILE): 'zip'])
+        writePom('g', 'archive', '1.0', 'repo/g/archive/1.0/archive-1.0.pom')
+        writeJar('repo/g/android/1.0/android-1.0.aar', [(FOO_CLASS_FILE): 'aar'])
+        writePom('g', 'android', '1.0', 'repo/g/android/1.0/android-1.0.pom', '<packaging>aar</packaging>')
+        writeOtherModule()
+
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            maven { url = uri('repo') }
+        }
+        dependencies {
+            api 'g:archive:1.0@zip'
+            api 'g:android:1.0'
+            api 'g:other:1.0'
+        }
+        """.stripIndent()
+
+        then: "only jars are indexed, though the zip and the aar have a class file at their root"
+        with('checkClassUniqueness').build()
+        !new File(projectDir, 'baseline-class-uniqueness.lock').exists()
+    }
+
     def 'indexes each jar once for projects with the same classpath'() {
         when:
         // a module name unique to this test run, so the jars aren't already indexed by an earlier test
@@ -483,12 +562,19 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
     }
 
-    private void writePom(String group, String module, String version, String path) {
+    /** {@code g:other:1.0}, whose copy of {@link #FOO_CLASS} differs from any other test's. */
+    private void writeOtherModule() {
+        writeJar('repo/g/other/1.0/other-1.0.jar', [(FOO_CLASS_FILE): 'other'])
+        writePom('g', 'other', '1.0', 'repo/g/other/1.0/other-1.0.pom')
+    }
+
+    /** Writes a POM, with {@code elements} such as {@code <packaging>} or {@code <dependencies>} after the version. */
+    private void writePom(String group, String module, String version, String path, String elements = '') {
         File pom = file(path)
         pom.parentFile.mkdirs()
         pom.text = """\
             <project><modelVersion>4.0.0</modelVersion><groupId>${group}</groupId><artifactId>${module}</artifactId>
-            <version>${version}</version></project>
+            <version>${version}</version>${elements}</project>
             """.stripIndent()
     }
 }

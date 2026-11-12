@@ -40,6 +40,11 @@ public abstract class ClassIndexTransform implements TransformAction<TransformPa
     /** The artifact type of class indexes. */
     public static final String ARTIFACT_TYPE = "class-uniqueness-index";
 
+    /** The artifact type the transform takes, which {@link IndexableArtifactTypeRule} matches with any other. */
+    public static final String INPUT_ARTIFACT_TYPE = "class-uniqueness-input";
+
+    private static final String JAR_EXTENSION = ".jar";
+
     /** Appended to the jar's file name, which the check needs to recover the jar's classifier. */
     private static final String EXTENSION = ".cui";
 
@@ -55,6 +60,11 @@ public abstract class ClassIndexTransform implements TransformAction<TransformPa
         if (!jar.exists()) {
             // For example, the jar of a project whose jar task is disabled. Without an output, the jar is skipped.
             log.info("Skipping non-existent jar {}", jar);
+            return;
+        }
+        if (!jar.getName().endsWith(JAR_EXTENSION)) {
+            // The transform takes artifacts of every type, such as aars, zips and native libraries
+            log.info("Skipping {}, which isn't a jar", jar);
             return;
         }
         Set<String> duplicates;
