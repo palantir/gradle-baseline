@@ -21,6 +21,7 @@ import com.palantir.baseline.classuniqueness.IndexableArtifactTypeRule;
 import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
+import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
@@ -42,7 +43,11 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
                 .add(IndexableArtifactTypeRule.class);
         project.getDependencies().registerTransform(ClassIndexTransform.class, spec -> {
             spec.getFrom()
-                    .attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ClassIndexTransform.INPUT_ARTIFACT_TYPE);
+                    .attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ClassIndexTransform.INPUT_ARTIFACT_TYPE)
+                    // Leaves out a project's classes and resources directories, so its jar is indexed instead
+                    .attribute(
+                            LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                            project.getObjects().named(LibraryElements.class, LibraryElements.JAR));
             spec.getTo().attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ClassIndexTransform.ARTIFACT_TYPE);
         });
         TaskProvider<CheckClassUniquenessLockTask> checkClassUniqueness = project.getTasks()

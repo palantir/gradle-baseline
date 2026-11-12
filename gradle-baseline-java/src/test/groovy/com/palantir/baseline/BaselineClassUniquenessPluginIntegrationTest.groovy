@@ -439,6 +439,29 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         !new File(projectDir, 'baseline-class-uniqueness.lock').exists()
     }
 
+    def 'checks the jars of projects on the compile classpath'() {
+        when:
+        multiProject.addSubproject('foo')
+        multiProject.addSubproject('bar')
+        file('foo/src/main/java/com/something/MyClass.java') << 'package com.something; class MyClass { int foo; }'
+        file('bar/src/main/java/com/something/MyClass.java') << 'package com.something; class MyClass { int bar; }'
+
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api project(':foo')
+            api project(':bar')
+        }
+        checkClassUniqueness {
+            configurations.add project.configurations.compileClasspath
+        }
+        """.stripIndent()
+
+        then: "the compile classpath has the projects' classes directories, but the check indexes their jars"
+        with('checkClassUniqueness').buildAndFail().output =~
+                /## compileClasspath\s+\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass/
+    }
+
     def 'indexes each jar once for projects with the same classpath'() {
         when:
         // a module name unique to this test run, so the jars aren't already indexed by an earlier test
