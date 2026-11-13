@@ -20,6 +20,7 @@ import com.palantir.gradle.plugintesting.GradleTestVersions
 import spock.lang.Unroll
 
 import java.nio.file.Files
+import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import org.gradle.testkit.runner.BuildResult
@@ -29,6 +30,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
     private static final String FOO_CLASS = 'com.example.Foo'
     private static final String FOO_CLASS_FILE = 'com/example/Foo.class'
+    private static final Pattern FOO_AND_BAR_CONFLICT_ON_BOTH_CLASSPATHS = ~/(?s)## compileClasspath\s+\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass\s+.*## runtimeClasspath\s+\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass\s/
 
     def standardBuildFile = """
         plugins {
@@ -462,6 +464,60 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
                 /## compileClasspath\s+\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass/
     }
 
+    def 'checks the test fixtures jars of projects'() {
+        when:
+        writeProjectConflictingWithBar("testFixtures(project(':foo'))", "apply plugin: 'java-test-fixtures'", 'testFixtures')
+
+        then:
+        with('checkClassUniqueness').buildAndFail().output =~ FOO_AND_BAR_CONFLICT_ON_BOTH_CLASSPATHS
+    }
+
+    def 'checks jars that projects publish from other configurations'() {
+        when:
+        writeProjectConflictingWithBar("project(path: ':foo', configuration: 'extraJarElements')", '''
+            def extraJar = tasks.register('extraJar', Jar) {
+                archiveClassifier = 'extra'
+                from sourceSets.main.output
+            }
+            configurations {
+                extraJarElements {
+                    canBeConsumed = true
+                    canBeResolved = false
+                }
+            }
+            artifacts {
+                extraJarElements extraJar
+            }
+            '''.stripIndent())
+
+        then:
+        with('checkClassUniqueness').buildAndFail().output =~ FOO_AND_BAR_CONFLICT_ON_BOTH_CLASSPATHS
+    }
+
+    def 'checks the jars that replace the jars of projects'() {
+        when:
+        // The way projects publish a shadow jar instead of their own jar, with a plain Jar task standing in for the
+        // shadow plugin's
+        writeProjectConflictingWithBar("project(':foo')", '''
+            def shadowJar = tasks.register('shadowJar', Jar) {
+                archiveClassifier = 'all'
+                from sourceSets.main.output
+            }
+            tasks.named('jar') {
+                enabled = false
+            }
+            configurations {
+                [apiElements, runtimeElements].each {
+                    it.outgoing.artifacts.clear()
+                    it.outgoing.artifact(shadowJar)
+                }
+            }
+            '''.stripIndent())
+
+        then:
+        with('checkClassUniqueness').buildAndFail().output =~ FOO_AND_BAR_CONFLICT_ON_BOTH_CLASSPATHS
+    }
+
     def 'indexes each jar once for projects with the same classpath'() {
         when:
         // a module name unique to this test run, so the jars aren't already indexed by an earlier test
@@ -586,6 +642,27 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
     }
 
     /** {@code g:other:1.0}, whose copy of {@link #FOO_CLASS} differs from any other test's. */
+    /**
+     * Projects {@code foo} and {@code bar} with differing copies of {@code com.something.MyClass}, which the root
+     * project depends on, {@code foo} through the given dependency. Both of its classpaths are checked.
+     */
+    private void writeProjectConflictingWithBar(String fooDependency, String fooBuildFile, String fooSourceSet = 'main') {
+        multiProject.addSubproject('foo', fooBuildFile)
+        multiProject.addSubproject('bar')
+        file("foo/src/${fooSourceSet}/java/com/something/MyClass.java") << 'package com.something; class MyClass { int foo; }'
+        file('bar/src/main/java/com/something/MyClass.java') << 'package com.something; class MyClass { int bar; }'
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api ${fooDependency}
+            api project(':bar')
+        }
+        checkClassUniqueness {
+            configurations.add project.configurations.compileClasspath
+        }
+        """.stripIndent()
+    }
+
     private void writeOtherModule() {
         writeJar('repo/g/other/1.0/other-1.0.jar', [(FOO_CLASS_FILE): 'other'])
         writePom('g', 'other', '1.0', 'repo/g/other/1.0/other-1.0.pom')
