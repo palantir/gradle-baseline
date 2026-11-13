@@ -28,9 +28,7 @@ import org.gradle.api.attributes.CompatibilityCheckDetails;
 public final class IndexableArtifactTypeRule implements AttributeCompatibilityRule<String> {
     @Override
     public void execute(CompatibilityCheckDetails<String> details) {
-        // Not the transform's own output, which would let Gradle chain the transform onto itself. Gradle 7.6 tries
-        // that chain for variants the transform doesn't take, such as a project's classes, and fails with
-        // "Recursive update".
+        // Not the transform's own output, so Gradle never chains the transform onto itself
         if (ClassIndexTransform.INPUT_ARTIFACT_TYPE.equals(details.getConsumerValue())
                 && !ClassIndexTransform.ARTIFACT_TYPE.equals(details.getProducerValue())) {
             details.compatible();
