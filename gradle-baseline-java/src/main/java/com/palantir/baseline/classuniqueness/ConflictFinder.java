@@ -44,7 +44,10 @@ public final class ConflictFinder {
     /** One class in a jar's index, without its name: its position in that index, and its content checksum. */
     private record IndexEntry(Jar jar, int position, long crcAndSize) {}
 
-    /** Entries, in one or more jars, that share a name hash. */
+    /**
+     * Entries that share a name hash, from one or more jars. They aren't necessarily a conflict: they can be in jars
+     * with the same label, or, rarely, have distinct names with equal hashes.
+     */
     private record SameNameHash(List<IndexEntry> entries) {}
 
     /** An index entry once its class name has been read. */
