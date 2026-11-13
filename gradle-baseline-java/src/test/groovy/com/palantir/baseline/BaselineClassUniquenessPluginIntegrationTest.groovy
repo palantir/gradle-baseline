@@ -641,7 +641,6 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
     }
 
-    /** {@code g:other:1.0}, whose copy of {@link #FOO_CLASS} differs from any other test's. */
     /**
      * Projects {@code foo} and {@code bar} with differing copies of {@code com.something.MyClass}, which the root
      * project depends on, {@code foo} through the given dependency. Both of its classpaths are checked.
@@ -663,6 +662,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
     }
 
+    /** {@code g:other:1.0}, whose copy of {@link #FOO_CLASS} differs from any other test's. */
     private void writeOtherModule() {
         writeJar('repo/g/other/1.0/other-1.0.jar', [(FOO_CLASS_FILE): 'other'])
         writePom('g', 'other', '1.0', 'repo/g/other/1.0/other-1.0.pom')
