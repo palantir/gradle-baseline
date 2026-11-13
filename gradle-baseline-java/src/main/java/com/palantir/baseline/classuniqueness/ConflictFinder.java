@@ -19,7 +19,6 @@ package com.palantir.baseline.classuniqueness;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +43,9 @@ public final class ConflictFinder {
     /** One class in a jar's index, without its name: its position in that index, and its content checksum. */
     private record IndexEntry(Jar jar, int position, long crcAndSize) {}
 
+    /** Entries, in one or more jars, that share a name hash. */
+    private record SameNameHash(List<IndexEntry> entries) {}
+
     /** An index entry once its class name has been read. */
     private record NamedEntry(IndexEntry entry, String className) {}
 
@@ -55,10 +57,10 @@ public final class ConflictFinder {
      * Groups of entries that share a name hash but not their content: the only entries whose names are needed.
      * Identical copies are harmless and by far the most common kind of duplicate, so they are dropped here.
      */
-    private static List<List<IndexEntry>> candidates(List<Jar> classpath) {
+    private static List<SameNameHash> candidates(List<Jar> classpath) {
         long[] duplicatedNameHashes = duplicatedNameHashes(classpath);
         return entriesWithNameHashIn(classpath, duplicatedNameHashes).stream()
-                .filter(ConflictFinder::contentDiffers)
+                .filter(sameNameHash -> contentDiffers(sameNameHash.entries()))
                 .toList();
     }
 
@@ -98,8 +100,7 @@ public final class ConflictFinder {
     }
 
     /** Every entry whose name hash is in {@code duplicatedNameHashes}, grouped by that hash. */
-    private static Collection<List<IndexEntry>> entriesWithNameHashIn(
-            List<Jar> classpath, long[] duplicatedNameHashes) {
+    private static List<SameNameHash> entriesWithNameHashIn(List<Jar> classpath, long[] duplicatedNameHashes) {
         Map<Long, List<IndexEntry>> entriesByNameHash = new HashMap<>();
         for (Jar jar : classpath) {
             ClassIndex index = jar.index();
@@ -112,14 +113,14 @@ public final class ConflictFinder {
                 }
             }
         }
-        return entriesByNameHash.values();
+        return entriesByNameHash.values().stream().map(SameNameHash::new).toList();
     }
 
     /** Reads names one jar at a time, so each index file is read at most once. */
-    private static List<NamedEntry> readNames(List<List<IndexEntry>> candidates) throws IOException {
+    private static List<NamedEntry> readNames(List<SameNameHash> candidates) throws IOException {
         Map<Jar, List<IndexEntry>> entriesByJar = new HashMap<>();
-        for (List<IndexEntry> sameNameHash : candidates) {
-            for (IndexEntry entry : sameNameHash) {
+        for (SameNameHash sameNameHash : candidates) {
+            for (IndexEntry entry : sameNameHash.entries()) {
                 entriesByJar
                         .computeIfAbsent(entry.jar(), _jar -> new ArrayList<>())
                         .add(entry);
