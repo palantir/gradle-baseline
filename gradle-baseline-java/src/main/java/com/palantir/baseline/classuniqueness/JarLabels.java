@@ -35,6 +35,9 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 final class JarLabels {
     private static final String SNAPSHOT = "SNAPSHOT";
 
+    /** What a unique snapshot has in place of {@code SNAPSHOT}, such as {@code 20250101.123456-1}. */
+    private static final String UNIQUE_SNAPSHOT_TIMESTAMP = "\\d{8}\\.\\d{6}-\\d+";
+
     private JarLabels() {}
 
     static JarLabel label(ModuleVersionIdentifier coordinates, String jarFileName) {
@@ -106,8 +109,8 @@ final class JarLabels {
         if (version.endsWith("-" + SNAPSHOT)) {
             // e.g. version 1.0-SNAPSHOT in bar-1.0-20250101.123456-1-tests.jar
             String base = version.substring(0, version.length() - SNAPSHOT.length());
-            Matcher timestamped = Pattern.compile(Pattern.quote(base) + "\\d{8}\\.\\d{6}-\\d+")
-                    .matcher(fileName);
+            Matcher timestamped =
+                    Pattern.compile(Pattern.quote(base) + UNIQUE_SNAPSHOT_TIMESTAMP).matcher(fileName);
             if (timestamped.find()) {
                 return List.of(version, timestamped.group());
             }
