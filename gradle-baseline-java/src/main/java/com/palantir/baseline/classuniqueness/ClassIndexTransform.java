@@ -15,6 +15,7 @@
  */
 package com.palantir.baseline.classuniqueness;
 
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -86,7 +87,6 @@ public abstract class ClassIndexTransform implements TransformAction<TransformPa
 
     /** The name of the jar the given index was written for. */
     static String jarFileName(File index) {
-        String indexName = index.getName();
-        return indexName.substring(0, indexName.length() - EXTENSION.length());
+        return Files.getNameWithoutExtension(index.getName());
     }
 }
