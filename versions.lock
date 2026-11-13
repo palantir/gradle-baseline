@@ -44,7 +44,7 @@ com.google.errorprone:error_prone_annotations:2.52.0 (7 constraints: 67640150)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f5155113)
 
-com.google.guava:guava:33.8.0-jre (17 constraints: 6b76cdcf)
+com.google.guava:guava:33.8.0-jre (17 constraints: 6e7642d9)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -58,7 +58,7 @@ com.googlecode.java-diff-utils:diffutils:1.3.0 (1 constraints: 0605f935)
 
 com.googlecode.javaewah:JavaEWAH:1.2.3 (1 constraints: 460e7e50)
 
-com.palantir.baseline-error-prone:gradle-baseline-error-prone:0.7.0 (1 constraints: 09050036)
+com.palantir.baseline-error-prone:gradle-baseline-error-prone:0.34.0 (1 constraints: 3905373b)
 
 com.palantir.gradle.failure-reports:gradle-failure-reports-common:1.18.0 (1 constraints: f21c3bc2)
 
@@ -66,7 +66,7 @@ com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.18.0 (4 
 
 com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.8.0 (4 constraints: 9a45003e)
 
-com.palantir.gradle.utils:environment-variables:0.31.0 (3 constraints: ea3135fd)
+com.palantir.gradle.utils:environment-variables:0.31.0 (4 constraints: 774ace7c)
 
 com.palantir.gradle.utils:exec:0.31.0 (2 constraints: bb1edeb4)
 
@@ -84,7 +84,9 @@ com.palantir.javaformat:palantir-java-format-jdk-bootstrap:2.87.0 (1 constraints
 
 com.palantir.javaformat:palantir-java-format-spi:2.87.0 (2 constraints: 342e461e)
 
-com.palantir.suppressible-error-prone:gradle-suppressible-error-prone:2.26.0 (1 constraints: 7419b3d0)
+com.palantir.suppressible-error-prone:artifact-transforms:2.35.0 (1 constraints: 301d57d8)
+
+com.palantir.suppressible-error-prone:gradle-suppressible-error-prone:2.35.0 (1 constraints: 7419b4d0)
 
 com.squareup.okhttp3:okhttp:4.12.0 (1 constraints: f6093eb3)
 
@@ -100,9 +102,9 @@ dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
 
 javax.inject:javax.inject:1 (7 constraints: e66230f0)
 
-net.ltgt.gradle:gradle-errorprone-plugin:4.3.0 (2 constraints: 3d366a24)
+net.ltgt.gradle:gradle-errorprone-plugin:5.2.0 (2 constraints: 3d366c24)
 
-one.util:streamex:0.9.0 (4 constraints: 294d039f)
+one.util:streamex:0.9.0 (4 constraints: 264d029f)
 
 org.apache.commons:commons-lang3:3.22.0 (3 constraints: be2800c6)
 
@@ -186,7 +188,7 @@ org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 (2 constraints: 8118c1c5)
 
 org.jspecify:jspecify:1.0.1 (10 constraints: 039e63ac)
 
-org.ow2.asm:asm:9.11.1 (7 constraints: 3873ca97)
+org.ow2.asm:asm:9.11.1 (8 constraints: 2d8ce032)
 
 org.slf4j:jcl-over-slf4j:2.0.19 (1 constraints: 2a18bb6a)
 
