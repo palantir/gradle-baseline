@@ -18,24 +18,20 @@ package com.palantir.baseline.classuniqueness;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import one.util.streamex.StreamEx;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.artifacts.result.DependencyResult;
+import org.gradle.api.artifacts.result.ResolutionResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
-import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.ListProperty;
@@ -76,11 +72,13 @@ public abstract class CheckedConfiguration {
                             || component instanceof ProjectComponentIdentifier);
                 })
                 .getArtifacts();
-        Provider<Map<ComponentIdentifier, ModuleVersionIdentifier>> coordinates = configuration
-                .getIncoming()
-                .getResolutionResult()
+        ResolutionResult resolutionResult = configuration.getIncoming().getResolutionResult();
+        // getAllComponents() resolves the graph when called, so it's called once the root component is needed
+        Provider<Map<ComponentIdentifier, ModuleVersionIdentifier>> coordinates = resolutionResult
                 .getRootComponent()
-                .map(CheckedConfiguration::coordinatesByComponent);
+                .map(_root -> StreamEx.of(resolutionResult.getAllComponents())
+                        .filter(component -> component.getModuleVersion() != null)
+                        .toMap(ResolvedComponentResult::getId, ResolvedComponentResult::getModuleVersion));
 
         getConfigurationName().set(configuration.getName());
         getClassIndexes().from(indexes.getArtifactFiles());
@@ -115,29 +113,5 @@ public abstract class CheckedConfiguration {
                     return jarCoordinates == null ? new JarLabel(jarName) : JarLabel.of(jarCoordinates, jarName);
                 })
                 .toList();
-    }
-
-    /** The coordinates of every component in a resolved graph, projects included. */
-    private static Map<ComponentIdentifier, ModuleVersionIdentifier> coordinatesByComponent(
-            ResolvedComponentResult root) {
-        Map<ComponentIdentifier, ModuleVersionIdentifier> coordinates = new HashMap<>();
-        Set<ComponentIdentifier> visited = new HashSet<>();
-        Deque<ResolvedComponentResult> toVisit = new ArrayDeque<>();
-        toVisit.add(root);
-        while (!toVisit.isEmpty()) {
-            ResolvedComponentResult component = toVisit.pop();
-            if (!visited.add(component.getId())) {
-                continue;
-            }
-            if (component.getModuleVersion() != null) {
-                coordinates.put(component.getId(), component.getModuleVersion());
-            }
-            for (DependencyResult dependency : component.getDependencies()) {
-                if (dependency instanceof ResolvedDependencyResult resolved) {
-                    toVisit.add(resolved.getSelected());
-                }
-            }
-        }
-        return coordinates;
     }
 }

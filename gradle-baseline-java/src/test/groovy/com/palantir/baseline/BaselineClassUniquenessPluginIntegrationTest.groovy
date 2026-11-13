@@ -592,6 +592,33 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         outOfDate.output.contains('baseline-class-uniqueness.lock is out of date')
     }
 
+    @Unroll
+    def '#gradleVersion: labels project jars from a reused configuration cache entry'() {
+        when:
+        multiProject.addSubproject('foo')
+        multiProject.addSubproject('bar')
+        file('foo/src/main/java/com/something/MyClass.java') << 'package com.something; class MyClass { int foo; }'
+        file('bar/src/main/java/com/something/MyClass.java') << 'package com.something; class MyClass { int bar; }'
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api project(':foo')
+            api project(':bar')
+        }
+        """.stripIndent()
+        with('checkClassUniqueness', '--configuration-cache').withGradleVersion(gradleVersion).buildAndFail()
+        BuildResult reused = with('checkClassUniqueness', '--configuration-cache').withGradleVersion(gradleVersion).buildAndFail()
+
+        then:
+        reused.output.contains('Configuration cache entry reused')
+
+        and: "the projects' coordinates come from the dependency graph, which the reused entry still resolves"
+        reused.output =~ /\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass/
+
+        where:
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
+    }
+
     def 'skips jars that do not exist and checks the rest'() {
         when:
         multiProject.addSubproject('nojar', """
