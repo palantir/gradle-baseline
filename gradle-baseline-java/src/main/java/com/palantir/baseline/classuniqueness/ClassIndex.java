@@ -36,6 +36,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -89,14 +90,11 @@ public final class ClassIndex {
     record ClassEntry(long nameHash, long crcAndSize, String name) {}
 
     /**
-     * Indexes the classes of a jar from its central directory, without decompressing any entry.
-     *
-     * @return the names of classes the jar contains more than once, sorted; a well-formed jar has none
+     * Indexes the classes of a jar from its central directory, without decompressing any entry. A class the jar
+     * contains more than once gets an entry for each copy, as either could be the one that loads.
      */
-    public static Set<String> write(Path jar, Path indexFile) throws IOException {
+    public static void write(Path jar, Path indexFile) throws IOException {
         List<ClassEntry> entries = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        Set<String> duplicates = new TreeSet<>();
         try (ZipFile zip = new ZipFile(jar.toFile())) {
             for (ZipEntry entry : Collections.list(zip.entries())) {
                 String path = entry.getName();
@@ -105,15 +103,11 @@ public final class ClassIndex {
                 }
                 String name =
                         path.substring(0, path.length() - ".class".length()).replace('/', '.');
-                if (!seen.add(name)) {
-                    duplicates.add(name);
-                }
                 long crcAndSize = (entry.getCrc() << 32) | (entry.getSize() & 0xFFFFFFFFL);
                 entries.add(new ClassEntry(hashName(name), crcAndSize, name));
             }
         }
         writeEntries(entries, indexFile);
-        return duplicates;
     }
 
     @VisibleForTesting
@@ -164,12 +158,54 @@ public final class ClassIndex {
         }
     }
 
+    /** The index file, which is unique to the content of the jar it indexes. */
+    Path file() {
+        return file;
+    }
+
     public int size() {
         return nameHashes.length;
     }
 
     public long nameHash(int position) {
         return nameHashes[position];
+    }
+
+    /**
+     * The names of classes the jar contains more than once, sorted. A well-formed jar has none, so names are read only
+     * for a jar whose index has an equal name hash twice.
+     */
+    public SortedSet<String> duplicatedNames() throws IOException {
+        List<Integer> positions = sameNameHashPositions();
+        if (positions.isEmpty()) {
+            return Collections.emptySortedSet();
+        }
+        // Distinct names can, rarely, have equal hashes, so the names decide
+        Set<String> seen = new HashSet<>();
+        SortedSet<String> duplicatedNames = new TreeSet<>();
+        for (String name : names(positions)) {
+            if (!seen.add(name)) {
+                duplicatedNames.add(name);
+            }
+        }
+        return duplicatedNames;
+    }
+
+    /**
+     * Positions whose name hash another entry has too. The hashes are sorted, so equal ones are next to each other:
+     * for hashes {@code [3, 5, 5, 5, 8]}, positions 1, 2 and 3.
+     */
+    private List<Integer> sameNameHashPositions() {
+        List<Integer> positions = new ArrayList<>();
+        for (int position = 1; position < nameHashes.length; position++) {
+            if (nameHashes[position] == nameHashes[position - 1]) {
+                if (positions.isEmpty() || positions.get(positions.size() - 1) != position - 1) {
+                    positions.add(position - 1);
+                }
+                positions.add(position);
+            }
+        }
+        return positions;
     }
 
     /** Equal for identical class files; differing content gives a different value with near certainty. */

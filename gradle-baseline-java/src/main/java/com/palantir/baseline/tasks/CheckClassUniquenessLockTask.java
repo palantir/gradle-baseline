@@ -21,6 +21,7 @@ import com.palantir.baseline.classuniqueness.CheckedConfiguration;
 import com.palantir.baseline.classuniqueness.ConflictFinder;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Conflict;
 import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
+import com.palantir.baseline.classuniqueness.DuplicateEntryWarnings;
 import com.palantir.baseline.classuniqueness.JarLabel;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import difflib.DiffUtils;
@@ -50,6 +51,7 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
@@ -101,6 +103,9 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
     @OutputFile
     public abstract RegularFileProperty getLockFile();
 
+    @ServiceReference(DuplicateEntryWarnings.NAME)
+    public abstract Property<DuplicateEntryWarnings> getDuplicateEntryWarnings();
+
     /** The lock file's path is printed relative to this directory when {@code --fix} writes or deletes it. */
     @Internal
     public abstract DirectoryProperty getLogPathsRelativeTo();
@@ -111,6 +116,9 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
         for (CheckedConfiguration configuration : getCheckedConfigurations().get()) {
             Instant before = Instant.now();
             List<Jar> jars = configuration.loadJars();
+            for (Jar jar : jars) {
+                getDuplicateEntryWarnings().get().warnIfMalformed(jar);
+            }
             List<Conflict> conflicts = ConflictFinder.find(jars);
             getLogger()
                     .info(

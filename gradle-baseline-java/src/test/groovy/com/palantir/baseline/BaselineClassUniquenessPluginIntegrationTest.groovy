@@ -30,6 +30,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
     private static final String FOO_CLASS = 'com.example.Foo'
     private static final String FOO_CLASS_FILE = 'com/example/Foo.class'
+    private static final Pattern MALFORMED_JAR_WARNING = ~/likely malformed: malformed-1\.0\.jar/
     private static final Pattern FOO_AND_BAR_CONFLICT_ON_BOTH_CLASSPATHS = ~/(?s)## compileClasspath\s+\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass\s+.*## runtimeClasspath\s+\[\S+:bar, \S+:foo\]\s+- com\.something\.MyClass\s/
 
     def standardBuildFile = """
@@ -619,6 +620,34 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 
+    def 'warns about a jar that contains a class twice once per build'() {
+        when:
+        writeModuleWithDuplicateEntry('malformed')
+        buildFile << standardBuildFile
+        buildFile << """
+        subprojects {
+            apply plugin: 'com.palantir.baseline-class-uniqueness'
+            repositories {
+                maven { url = rootProject.uri('repo') }
+            }
+            dependencies {
+                implementation 'g:malformed:1.0'
+            }
+        }
+        """.stripIndent()
+        multiProject.addSubproject('one')
+        multiProject.addSubproject('two')
+        BuildResult first = with('checkClassUniqueness').build()
+        BuildResult later = with('checkClassUniqueness', '--rerun-tasks').build()
+
+        then: "both projects check the jar, and the build warns once"
+        first.output.findAll(MALFORMED_JAR_WARNING).size() == 1
+        first.output.contains("The following entries appear multiple times: [${FOO_CLASS}]")
+
+        and: "a later build that runs the checks warns again, though the jar's index is already in the transforms cache"
+        later.output.findAll(MALFORMED_JAR_WARNING).size() == 1
+    }
+
     def 'skips jars that do not exist and checks the rest'() {
         when:
         multiProject.addSubproject('nojar', """
@@ -654,6 +683,17 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         writePom('g', module, '1.0', "repo/g/${module}/1.0/${module}-1.0.pom")
         writeJar("repo/g/${module}-copy/1.0/${module}-copy-1.0.jar", [(FOO_CLASS_FILE): 'two'])
         writePom('g', "${module}-copy", '1.0', "repo/g/${module}-copy/1.0/${module}-copy-1.0.pom")
+    }
+
+    /** {@code g:<module>:1.0}, whose jar contains two entries for {@link #FOO_CLASS_FILE}. */
+    private void writeModuleWithDuplicateEntry(String module) {
+        String jarPath = "repo/g/${module}/1.0/${module}-1.0.jar"
+        // A zip can't be written with a duplicate entry, so the second entry's name is changed afterwards
+        String otherClassFile = 'com/example/Fox.class'
+        writeJar(jarPath, [(FOO_CLASS_FILE): 'one', (otherClassFile): 'two'])
+        File jar = file(jarPath)
+        jar.setBytes(new String(jar.bytes, 'ISO-8859-1').replace(otherClassFile, FOO_CLASS_FILE).getBytes('ISO-8859-1'))
+        writePom('g', module, '1.0', "repo/g/${module}/1.0/${module}-1.0.pom")
     }
 
     private void writeJar(String path, Map<String, String> entries) {

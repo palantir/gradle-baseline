@@ -19,7 +19,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Set;
 import org.gradle.api.artifacts.transform.InputArtifact;
 import org.gradle.api.artifacts.transform.TransformAction;
 import org.gradle.api.artifacts.transform.TransformOutputs;
@@ -68,20 +67,11 @@ public abstract class ClassIndexTransform implements TransformAction<TransformPa
             log.info("Skipping {}, which isn't a jar", jar);
             return;
         }
-        Set<String> duplicates;
         try {
-            duplicates = ClassIndex.write(
+            ClassIndex.write(
                     jar.toPath(), outputs.file(jar.getName() + EXTENSION).toPath());
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to index the classes of " + jar, e);
-        }
-        if (!duplicates.isEmpty()) {
-            log.warn("""
-                Warning: Gradle Baseline found a dependency jar that contains more than one zip entry for \
-                a class and is likely malformed: {}
-                The following entries appear multiple times: {}
-                This issue should be reported to the maintainer of the dependency.\
-                """, jar.getName(), duplicates);
         }
     }
 

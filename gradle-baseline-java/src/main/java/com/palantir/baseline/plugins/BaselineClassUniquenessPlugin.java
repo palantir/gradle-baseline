@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.classuniqueness.ClassIndexTransform;
+import com.palantir.baseline.classuniqueness.DuplicateEntryWarnings;
 import com.palantir.baseline.classuniqueness.IndexableArtifactTypeRule;
 import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
 import org.gradle.api.Project;
@@ -50,6 +51,9 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
                             project.getObjects().named(LibraryElements.class, LibraryElements.JAR));
             spec.getTo().attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ClassIndexTransform.ARTIFACT_TYPE);
         });
+        project.getGradle()
+                .getSharedServices()
+                .registerIfAbsent(DuplicateEntryWarnings.NAME, DuplicateEntryWarnings.class, _spec -> {});
         TaskProvider<CheckClassUniquenessLockTask> checkClassUniqueness = project.getTasks()
                 .register("checkClassUniqueness", CheckClassUniquenessLockTask.class, task -> {
                     task.getShouldFix()

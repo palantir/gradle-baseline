@@ -19,6 +19,7 @@ package com.palantir.baseline.classuniqueness;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
+import com.palantir.baseline.classuniqueness.ClassIndex.ClassEntry;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -80,18 +81,34 @@ class ClassIndexTest {
     void reports_classes_the_jar_contains_more_than_once() throws IOException {
         Path jar = TestJars.writeWithDuplicateEntry(tempDir, "malformed", FOO, "one", "two");
 
-        Path indexFile = tempDir.resolve("malformed.cui");
-        assertThat(ClassIndex.write(jar, indexFile))
-                .as("write returns the classes the jar contains more than once, for the transform to warn about")
-                .containsExactly(FOO_CLASS);
-        assertThat(allNames(ClassIndex.read(indexFile)))
+        ClassIndex index = index(jar);
+        assertThat(index.duplicatedNames()).containsExactly(FOO_CLASS);
+        assertThat(allNames(index))
                 .as("both entries are kept, as either could be the one that loads")
                 .containsExactly(FOO_CLASS, FOO_CLASS);
     }
 
+    @Test
+    void well_formed_jar_has_no_duplicated_names() throws IOException {
+        Path jar = TestJars.write(tempDir, "jar", ImmutableMap.of(FOO, "foo", "com/example/Bar.class", "bar"));
+
+        assertThat(index(jar).duplicatedNames()).isEmpty();
+    }
+
+    @Test
+    void distinct_names_with_equal_hashes_are_not_duplicated() throws IOException {
+        Path indexFile = tempDir.resolve("collision.cui");
+        ClassIndex.writeEntries(
+                List.of(new ClassEntry(1L, 10L, FOO_CLASS), new ClassEntry(1L, 20L, "com.example.Bar")), indexFile);
+
+        assertThat(ClassIndex.read(indexFile).duplicatedNames())
+                .as("a name hash shared by two names is a collision, not a class the jar contains twice")
+                .isEmpty();
+    }
+
     private ClassIndex index(Path jar) throws IOException {
         Path indexFile = Files.createTempFile(tempDir, "index", ".cui");
-        assertThat(ClassIndex.write(jar, indexFile)).isEmpty();
+        ClassIndex.write(jar, indexFile);
         return ClassIndex.read(indexFile);
     }
 
