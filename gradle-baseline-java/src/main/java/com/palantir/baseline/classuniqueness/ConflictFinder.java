@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -130,7 +129,6 @@ public final class ConflictFinder {
         for (Map.Entry<Jar, List<IndexEntry>> sameJar : entriesByJar.entrySet()) {
             Jar jar = sameJar.getKey();
             List<IndexEntry> jarEntries = sameJar.getValue();
-            jarEntries.sort(Comparator.comparingInt(IndexEntry::position));
             List<String> names = jar.index()
                     .names(jarEntries.stream().map(IndexEntry::position).toList());
             for (int i = 0; i < jarEntries.size(); i++) {
