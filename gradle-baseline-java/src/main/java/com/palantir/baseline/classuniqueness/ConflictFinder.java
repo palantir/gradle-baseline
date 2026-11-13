@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import one.util.streamex.EntryStream;
 
 /** Finds classes that more than one jar on a classpath defines with differing content. */
 public final class ConflictFinder {
@@ -164,13 +165,7 @@ public final class ConflictFinder {
                         .add(className);
             }
         }
-        List<Conflict> conflicts = new ArrayList<>(classNamesByJarLabels.size());
-        for (Map.Entry<Set<JarLabel>, SortedSet<String>> sameJars : classNamesByJarLabels.entrySet()) {
-            Set<JarLabel> jarLabels = sameJars.getKey();
-            SortedSet<String> classNames = sameJars.getValue();
-            conflicts.add(new Conflict(jarLabels, classNames));
-        }
-        return conflicts;
+        return EntryStream.of(classNamesByJarLabels).mapKeyValue(Conflict::new).toList();
     }
 
     private static boolean contentDiffers(List<IndexEntry> entries) {
