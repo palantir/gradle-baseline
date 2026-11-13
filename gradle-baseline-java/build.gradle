@@ -14,8 +14,8 @@ dependencies {
     implementation 'commons-io:commons-io'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
-    implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'com.google.guava:guava'
+    implementation 'one.util:streamex'
     implementation 'org.apache.maven.shared:maven-dependency-analyzer', {
         // Use maven-core rather than the legacy maven-project component
         exclude group: 'org.apache.maven', module: 'maven-project'
