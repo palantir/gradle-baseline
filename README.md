@@ -15,7 +15,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-format`                     | Formats your java files to comply with checkstyle
 | `com.palantir.baseline-scala`                      | Enforces formatting using [scalastyle](https://github.com/scalastyle/scalastyle)
 | `com.palantir.baseline-class-uniqueness`           | Analyses your classpath to ensure no fully-qualified class is defined more than once.
-| `com.palantir.baseline-circleci`                   | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
+| `com.palantir.baseline-circleci`                   | [CircleCI](https://circleci.com/) integration using `$CIRCLE_TEST_REPORTS` and `$CIRCLE_HTML_TEST_REPORTS` (falling back to `$CIRCLE_ARTIFACTS`) dirs
 | `com.palantir.baseline-config`                     | Config files for the above plugins
 | `com.palantir.baseline-reproducibility`            | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 | `com.palantir.baseline-exact-dependencies`         | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
@@ -150,7 +150,7 @@ configurations.all {
 The plugin surfaces failures using JUnit XML which is rendered nicely by CircleCI, by
 
 1. Storing JUnit test reports in `$CIRCLE_TEST_REPORTS/junit`
-2. Storeing the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
+2. Storing the HTML output of tests in `$CIRCLE_HTML_TEST_REPORTS/junit`, or `$CIRCLE_ARTIFACTS/junit` if the former is not set
 
 ## com.palantir.baseline-format
 
