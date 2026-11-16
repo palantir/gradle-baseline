@@ -17,10 +17,12 @@
 package com.palantir.baseline.tasks;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedMap;
-import com.palantir.baseline.services.ClassUniquenessArtifactIdentifier;
-import com.palantir.baseline.services.JarClassHasher;
+import com.palantir.baseline.classuniqueness.CheckedConfiguration;
+import com.palantir.baseline.classuniqueness.ConflictFinder;
+import com.palantir.baseline.classuniqueness.ConflictFinder.Conflict;
+import com.palantir.baseline.classuniqueness.ConflictFinder.Jar;
+import com.palantir.baseline.classuniqueness.DuplicateEntryWarnings;
+import com.palantir.baseline.classuniqueness.JarLabel;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import difflib.DiffUtils;
 import difflib.Patch;
@@ -28,25 +30,31 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Comparator;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import javax.inject.Inject;
+import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.Named;
-import org.gradle.api.Task;
+import org.gradle.api.DomainObjectSet;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.SetProperty;
-import org.gradle.api.specs.Spec;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
@@ -58,135 +66,120 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
             + "cause different behaviour depending on classpath ordering.\n"
             + "# Run ./gradlew checkClassUniqueness --fix to update this file\n\n";
 
-    // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
-    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
-    public final SetProperty<Configuration> configurations;
-
-    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
-    public final Property<JarClassHasher> jarClassHasher;
-
-    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
-    public final Property<Boolean> shouldFix;
-
-    private final File lockFile;
+    // Lets builds add configurations with `configurations.add ...`, as they did when this was a public SetProperty
+    // field. Configurations can't be stored in the configuration cache, so each one is captured as a
+    // CheckedConfiguration when it is added, and this set is left out of the cache.
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
+    private final transient DomainObjectSet<Configuration> configurations;
 
     public CheckClassUniquenessLockTask() {
-        this.configurations = getProject().getObjects().setProperty(Configuration.class);
-        this.jarClassHasher = getProject().getObjects().property(JarClassHasher.class);
-        this.shouldFix = getProject().getObjects().property(Boolean.class);
-        this.lockFile = getProject().file("baseline-class-uniqueness.lock");
-        onlyIf(new Spec<Task>() {
-            @Override
-            public boolean isSatisfiedBy(Task task) {
-                return !configurations.get().isEmpty();
-            }
+        this.configurations = getObjects().domainObjectSet(Configuration.class);
+        configurations.all(configuration -> {
+            CheckedConfiguration checked = getObjects().newInstance(CheckedConfiguration.class);
+            checked.from(configuration);
+            getCheckedConfigurations().add(checked);
         });
+        onlyIf(
+                "there are configurations to check",
+                _task -> !getCheckedConfigurations().get().isEmpty());
     }
 
-    /**
-     * This method exists purely for up-to-dateness purposes - we want to re-run if the contents of a configuration
-     * changes.
-     */
-    @Input
-    public final Map<String, ImmutableList<String>> getContentsOfAllConfigurations() {
-        return configurations.get().stream()
-                .collect(Collectors.toMap(CheckClassUniquenessLockTask::getConfigurationName, configuration -> {
-                    return configuration.getIncoming().getResolutionResult().getAllComponents().stream()
-                            .map(resolvedComponentResult ->
-                                    Objects.toString(resolvedComponentResult.getModuleVersion()))
-                            .collect(ImmutableList.toImmutableList()); // Gradle requires this to be Serializable
-                }));
+    @Inject
+    protected abstract ObjectFactory getObjects();
+
+    /** Configurations whose jars must not contain identically named classes with differing content. */
+    @Internal
+    public final DomainObjectSet<Configuration> getConfigurations() {
+        return configurations;
     }
+
+    @Nested
+    public abstract ListProperty<CheckedConfiguration> getCheckedConfigurations();
+
+    @Internal
+    @Option(option = "fix", description = "Whether to apply the suggested fix to baseline-class-uniqueness.lock")
+    public abstract Property<Boolean> getShouldFix();
 
     @OutputFile
-    public final File getLockFile() {
-        return lockFile;
-    }
+    public abstract RegularFileProperty getLockFile();
 
-    @Option(option = "fix", description = "Whether to apply the suggested fix to baseline-class-uniqueness.lock")
-    public final void setShouldFix(boolean shouldFix) {
-        this.shouldFix.set(shouldFix);
-    }
+    @ServiceReference(DuplicateEntryWarnings.NAME)
+    public abstract Property<DuplicateEntryWarnings> getDuplicateEntryWarnings();
+
+    /** The lock file's path is printed relative to this directory when {@code --fix} writes or deletes it. */
+    @Internal
+    public abstract DirectoryProperty getLogPathsRelativeTo();
 
     @TaskAction
-    public final void doIt() {
-        ImmutableSortedMap<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
-                .collect(ImmutableSortedMap.toImmutableSortedMap(
-                        Comparator.naturalOrder(),
-                        CheckClassUniquenessLockTask::getConfigurationName,
-                        configuration -> {
-                            ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(
-                                    jarClassHasher.get(), getProject().getLogger());
-                            analyzer.analyzeConfiguration(configuration);
-                            Collection<Set<ClassUniquenessArtifactIdentifier>> problemJars =
-                                    analyzer.getDifferingProblemJars();
+    public final void doIt() throws IOException {
+        SortedMap<String, List<Conflict>> conflictsByConfigurationName = new TreeMap<>();
+        for (CheckedConfiguration configuration : getCheckedConfigurations().get()) {
+            Instant before = Instant.now();
+            List<Jar> jars = configuration.loadJars();
+            for (Jar jar : jars) {
+                getDuplicateEntryWarnings().get().warnIfMalformed(jar);
+            }
+            List<Conflict> conflicts = ConflictFinder.find(jars);
+            getLogger()
+                    .info(
+                            "Checked {} classes from {} dependencies for uniqueness ({}ms)",
+                            jars.stream().mapToInt(jar -> jar.index().size()).sum(),
+                            jars.size(),
+                            Duration.between(before, Instant.now()).toMillis());
+            if (!conflicts.isEmpty()) {
+                conflictsByConfigurationName.put(
+                        configuration.getConfigurationName().get(), conflicts);
+            }
+        }
 
-                            if (problemJars.isEmpty()) {
-                                return Optional.empty();
-                            }
-
-                            ImmutableSortedMap<String, String> clashingHeadersToClasses = problemJars.stream()
-                                    .collect(ImmutableSortedMap.toImmutableSortedMap(
-                                            Comparator.naturalOrder(),
-                                            this::clashingJarHeader,
-                                            clashingJars -> clashingClasses(analyzer, clashingJars)));
-
-                            return Optional.of(clashingHeadersToClasses.entrySet().stream()
-                                    .flatMap(entry -> {
-                                        String clashingJarHeader = entry.getKey();
-                                        String clashingClasses = entry.getValue();
-                                        return Stream.of(clashingJarHeader, clashingClasses);
-                                    })
-                                    .collect(Collectors.joining("\n")));
-                        }));
-
-        boolean conflictsFound = resultsByConfiguration.values().stream().anyMatch(Optional::isPresent);
-        if (!conflictsFound) {
+        if (conflictsByConfigurationName.isEmpty()) {
             // this is desirable because if means if people apply the plugin to lots of projects which are already
             // compliant, they don't get loads of noisy lockfiles created.
             ensureLockfileDoesNotExist();
         } else {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(HEADER);
-            resultsByConfiguration.forEach((configuration, maybeContents) -> maybeContents.ifPresent(contents -> {
-                stringBuilder.append("## ").append(configuration).append("\n");
-                stringBuilder.append(contents).append('\n');
-            }));
-            ensureLockfileContains(stringBuilder.toString());
+            ensureLockfileContains(lockFileContents(conflictsByConfigurationName));
         }
     }
 
-    private String clashingClasses(
-            ClassUniquenessAnalyzer analyzer, Set<ClassUniquenessArtifactIdentifier> clashingJars) {
-        return analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
-                .sorted()
-                .map(className -> String.format("  - %s", className))
-                .collect(Collectors.joining("\n"));
+    private static String lockFileContents(SortedMap<String, List<Conflict>> conflictsByConfigurationName) {
+        StringBuilder contents = new StringBuilder(HEADER);
+        for (Map.Entry<String, List<Conflict>> configuration : conflictsByConfigurationName.entrySet()) {
+            String configurationName = configuration.getKey();
+            List<Conflict> conflicts = configuration.getValue();
+            contents.append("## ").append(configurationName).append('\n');
+            contents.append(lockFileSection(conflicts)).append('\n');
+        }
+        return contents.toString();
     }
 
-    private String clashingJarHeader(Set<ClassUniquenessArtifactIdentifier> clashingJars) {
-        return clashingJars.stream()
-                .map(ident -> {
-                    String mvi = ident.moduleVersionIdentifier().getGroup() + ":"
-                            + ident.moduleVersionIdentifier().getName();
-                    return ident.classifier().isEmpty()
-                            ? mvi
-                            : mvi + " (classifier=" + ident.classifier().get() + ")";
-                })
-                .sorted()
-                .collect(Collectors.joining(", ", "[", "]"));
+    private static String lockFileSection(List<Conflict> conflicts) {
+        SortedMap<String, SortedSet<String>> classesByHeader = new TreeMap<>();
+        for (Conflict conflict : conflicts) {
+            classesByHeader.put(clashingJarHeader(conflict.jarLabels()), conflict.classNames());
+        }
+        return EntryStream.of(classesByHeader)
+                .flatMapKeyValue((header, classNames) -> StreamEx.of(classNames)
+                        .map(className -> String.format("  - %s", className))
+                        .prepend(header))
+                .joining("\n");
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
+    private static String clashingJarHeader(Set<JarLabel> jarLabels) {
+        return jarLabels.stream().map(JarLabel::value).sorted().collect(Collectors.joining(", ", "[", "]"));
+    }
+
     private void ensureLockfileContains(String expected) {
-        if (shouldFix.get()) {
+        File lockFile = getLockFile().get().getAsFile();
+        if (getShouldFix().get()) {
             try {
                 Files.writeString(lockFile.toPath(), expected);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
             getLogger()
-                    .lifecycle("Updated {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
+                    .lifecycle(
+                            "Updated {}",
+                            getLogPathsRelativeTo().get().getAsFile().toPath().relativize(lockFile.toPath()));
             return;
         }
 
@@ -231,14 +224,19 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
         }
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private void ensureLockfileDoesNotExist() {
+        File lockFile = getLockFile().get().getAsFile();
         if (lockFile.exists()) {
-            if (shouldFix.get()) {
+            if (getShouldFix().get()) {
                 FileUtils.deleteQuietly(lockFile);
                 getLogger()
                         .lifecycle(
-                                "Deleted {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
+                                "Deleted {}",
+                                getLogPathsRelativeTo()
+                                        .get()
+                                        .getAsFile()
+                                        .toPath()
+                                        .relativize(lockFile.toPath()));
             } else {
                 throw new ExceptionWithSuggestion(
                         String.format(
@@ -248,23 +246,5 @@ public abstract class CheckClassUniquenessLockTask extends DefaultTask {
                         "./gradlew checkClassUniqueness --fix");
             }
         }
-    }
-
-    /**
-     * Needed for gradle 7 -> 8 compatibility.  The Configuration interface directly had a getName() method in gradle 7.
-     * This was removed in gradle 8 and instead Configuration extends Named.  While the method signature is the same,
-     * code compiled against gradle 8 will have an incorrect reference to it in the class file when run under gradle 7.
-     *
-     * This method works around that by having the code check for what interfaces are implemented at runtime.  Could
-     * also use reflection to just find the getName method but this is a little more explicit as to why.
-     */
-    private static String getConfigurationName(Object config) {
-        if (config instanceof Named named) {
-            return named.getName();
-        } else if (config instanceof Configuration configuration) {
-            return configuration.getName();
-        }
-
-        throw new IllegalArgumentException("Unknown class for getting name: " + config.getClass());
     }
 }
