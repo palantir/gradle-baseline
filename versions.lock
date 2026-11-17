@@ -102,7 +102,7 @@ net.ltgt.gradle:gradle-errorprone-plugin:4.3.0 (2 constraints: 3d366a24)
 
 one.util:streamex:0.9.0 (4 constraints: 294d039f)
 
-org.apache.commons:commons-lang3:3.22.0 (3 constraints: be2800c6)
+org.apache.commons:commons-lang3:3.22.0 (3 constraints: bf2830c6)
 
 org.apache.httpcomponents:httpclient:4.5.14 (1 constraints: 2c18d66a)
 
@@ -244,11 +244,11 @@ com.palantir.safe-logging:preconditions:3.21.0 (4 constraints: 9a55aeaa)
 
 com.palantir.safe-logging:safe-logging:3.21.0 (4 constraints: f93fb08f)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.98.0 (1 constraints: f4134270)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.99.0 (1 constraints: f5134570)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.98.0 (1 constraints: 4a05853b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.99.0 (1 constraints: 4b05883b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.98.0 (1 constraints: f4134270)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.99.0 (1 constraints: f5134570)
 
 com.palantir.sls.versions:sls-versions:1.21.0 (1 constraints: 811b4d61)
 
