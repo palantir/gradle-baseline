@@ -227,7 +227,7 @@ public class BaselineTestingIntegrationTest {
     @Test
     public void checkJUnitDependencies_JUnit5_without_junit_jupiter(GradleInvoker gradle, RootProject rootProject) {
         standardBuildFile(rootProject);
-        // The junit-jupiter dependency is added automatically by the jvm-test-suite plugin, so it is practically
+        // The junit-jupiter dependency is added automatically by baseline-testing, so it is practically
         // impossible for junit-jupiter to be absent. We manually exclude it here in order to test this case.
         rootProject.buildGradle().append("""
             configurations {
@@ -321,8 +321,7 @@ public class BaselineTestingIntegrationTest {
     /**
      * Without Gradle module metadata nothing aligns the version-less junit toolchain dependencies (normally the
      * junit-bom does), so they only resolve if something else provides a version. When a test source set has no
-     * sources, the version-less dependencies are not needed and should not be added. (Gradle's default test suite
-     * still adds junit-jupiter, but with a version, so that one always resolves.)
+     * sources, the dependencies are not needed and should not be added.
      */
     private void pomOnlyBuildFile(RootProject rootProject) {
         rootProject.buildGradle().plugins().add("java-library").add("com.palantir.baseline-testing");
@@ -352,7 +351,7 @@ public class BaselineTestingIntegrationTest {
 
         InvocationResult result = gradle.withArgs("printResolvedTestClasspaths").buildsSuccessfully();
 
-        assertThat(result).output().doesNotContain("junit-platform-launcher");
+        assertThat(result).output().contains("resolved testRuntimeClasspath").doesNotContain("junit-platform-launcher");
     }
 
     @Test

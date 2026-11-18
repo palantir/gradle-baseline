@@ -22,10 +22,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.plugins.JvmTestSuitePlugin;
-import org.gradle.api.plugins.jvm.JvmTestSuite;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -71,25 +68,21 @@ public final class BaselineTesting implements Plugin<Project> {
                 task.dependsOn(checkJUnitDependencies);
             });
 
-            // For backwards compatibility reasons, Gradle uses the legacy JUnit4 test toolchain for the default
-            // test suite and the JUnit Platform test toolchain for everything else.
-            // We want to use junit jupiter by default for the default test suite.
-            testingExtension
-                    .getSuites()
-                    .named(
-                            JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME,
-                            JvmTestSuite.class,
-                            JvmTestSuite::useJUnitJupiter);
-
-            // Gradle <8 does not automatically add junit toolchain deps. When the test-sets plugin is used instead
-            // of jvm-test-suites, these deps are not added either. We make sure that we lazily add these deps to
-            // the correct configurations if required. Note: we can't lazily configure test tasks or test suite then
-            // add the dependencies in that configuration action, as the Configurations may be resolved before the
-            // tasks/suites are realised, hence we have to work from the Configurations directly.
-            // See https://github.com/gradle/gradle/pull/26369
+            // Baseline adds the junit toolchain deps itself rather than relying on the jvm-test-suite toolchain
+            // (eg JvmTestSuite#useJUnitJupiter), so that they are only added to test source sets that actually
+            // contain tests. The toolchain adds a version-less junit-platform-launcher unconditionally, which fails
+            // to resolve when nothing provides a version (eg pom-only repositories or gradle-consistent-versions
+            // --write-locks without a junit pin), even for projects without any tests.
+            //
+            // This covers the default test suite (left on Gradle's legacy JUnit4 toolchain, which adds no deps), test
+            // tasks not created by jvm-test-suites (eg the test-sets plugin), and Gradle <8, whose toolchains add no
+            // deps either. Note: we can't lazily configure test tasks or test suite then add the dependencies in that
+            // configuration action, as the Configurations may be resolved before the tasks/suites are realised, hence
+            // we have to work from the Configurations directly. See https://github.com/gradle/gradle/pull/26369
             project.getConfigurations().configureEach(configuration -> {
                 configuration.getDependencies().addAllLater(project.provider(() -> {
-                    return testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(project)
+                    return testSourceSetsWithoutJunitToolchainDeps(project)
+                            .filter(BaselineTesting::mayContainTests)
                             .flatMap(sourceSet -> {
                                 if (configuration.getName().equals(sourceSet.getImplementationConfigurationName())) {
                                     return Stream.of(project.getDependencies().create(JUNIT_JUPITER));
@@ -107,55 +100,27 @@ public final class BaselineTesting implements Plugin<Project> {
                 }));
             });
 
-            // Both the jvm-test-suite toolchain (for the default test suite) and the block above add the junit
-            // toolchain dependencies to every test source set without a version, relying on the junit-bom (via Gradle
-            // module metadata) or a lock file/platform to supply one. Test source sets without any sources never
-            // run tests, so don't add these dependencies there: when nothing supplies a version (e.g. pom-only
-            // repositories combined with gradle-consistent-versions --write-locks) they fail to resolve.
-            SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-            sourceSets.configureEach(sourceSet -> project.getConfigurations()
-                    .matching(configuration ->
-                            configuration.getName().equals(sourceSet.getImplementationConfigurationName())
-                                    || configuration.getName().equals(sourceSet.getRuntimeOnlyConfigurationName()))
-                    .configureEach(configuration -> configuration.withDependencies(dependencies -> {
-                        if (isTestSourceSet(project, sourceSet) && hasNoSources(sourceSet)) {
-                            dependencies.removeIf(BaselineTesting::isVersionlessJunitToolchainDependency);
-                        }
-                    })));
-
             project.getTasks().withType(Test.class).configureEach(task -> configureTestTask(testingExtension, task));
         });
     }
 
-    private static boolean isTestSourceSet(Project project, SourceSet sourceSet) {
-        return project.getTasks().withType(Test.class).getNames().contains(sourceSet.getName());
-    }
-
-    private static boolean hasNoSources(SourceSet sourceSet) {
+    private static boolean mayContainTests(SourceSet sourceSet) {
         // Source directories produced by tasks (generated sources) may not exist yet when the classpath is resolved,
-        // so only treat the source set as empty if none of its sources are generated.
-        return sourceSet
+        // so a source set with generated sources counts as possibly containing tests even if it is currently empty.
+        return !sourceSet.getAllSource().isEmpty()
+                || !sourceSet
                         .getAllSource()
                         .getBuildDependencies()
                         .getDependencies(null)
-                        .isEmpty()
-                && sourceSet.getAllSource().isEmpty();
-    }
-
-    private static boolean isVersionlessJunitToolchainDependency(Dependency dependency) {
-        if (!(dependency instanceof ExternalModuleDependency)) {
-            return false;
-        }
-        String version = dependency.getVersion();
-        String coordinate = dependency.getGroup() + ":" + dependency.getName();
-        return (version == null || version.isEmpty())
-                && (coordinate.equals(JUNIT_JUPITER) || coordinate.equals(JUNIT_PLATFORM_LAUNCHER));
+                        .isEmpty();
     }
 
     private void configureTestTask(TestingExtension testingExtension, Test task) {
-        // For test tasks not created using test suites (ie using the old unbroken dome test-suites plugin),
-        // we must explicitly use the JUnit Platform
-        if (testTaskNotCreatedByJvmTestSuites(testingExtension, task.getName())) {
+        // The default test suite stays on Gradle's legacy JUnit4 toolchain (so that it does not add any deps, see
+        // above), and test tasks not created using test suites (ie using the old unbroken dome test-sets plugin) have
+        // no toolchain at all, so we must explicitly use the JUnit Platform for both.
+        if (testTaskNotCreatedByJvmTestSuites(testingExtension, task.getName())
+                || task.getName().equals(JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME)) {
             task.useJUnitPlatform();
         }
 
@@ -182,8 +147,7 @@ public final class BaselineTesting implements Plugin<Project> {
         }
     }
 
-    private static Stream<SourceSet> testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(
-            Project project) {
+    private static Stream<SourceSet> testSourceSetsWithoutJunitToolchainDeps(Project project) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
 
@@ -191,7 +155,9 @@ public final class BaselineTesting implements Plugin<Project> {
         boolean gradleVersionLessThan8 = GradleVersion.current().compareTo(GRADLE_8) < 0;
 
         return project.getTasks().withType(Test.class).getNames().stream().flatMap(testTaskName -> {
-            if (gradleVersionLessThan8 || testTaskNotCreatedByJvmTestSuites(testingExtension, testTaskName)) {
+            if (gradleVersionLessThan8
+                    || testTaskName.equals(JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME)
+                    || testTaskNotCreatedByJvmTestSuites(testingExtension, testTaskName)) {
                 return Stream.ofNullable(sourceSets.findByName(testTaskName));
             }
 
