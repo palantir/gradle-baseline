@@ -288,6 +288,115 @@ public class BaselineTestingIntegrationTest {
         gradle.withArgs("compileJava").buildsSuccessfully();
     }
 
+    private static final String printResolvedTestClasspathsTask = """
+        import org.gradle.api.artifacts.result.ResolvedComponentResult
+        import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+
+        tasks.register('printResolvedTestClasspaths') {
+            Map<String, Provider<ResolvedComponentResult>> roots = configurations.names
+                    .findAll { it ==~ /.*[tT]est(Compile|Runtime)Classpath/ }
+                    .collectEntries { [(it): configurations.getByName(it).incoming.resolutionResult.rootComponent] }
+            doLast {
+                roots.each { name, root ->
+                    Set<ResolvedComponentResult> seen = []
+                    List<ResolvedComponentResult> queue = [root.get()]
+                    while (!queue.isEmpty()) {
+                        def component = queue.remove(0)
+                        if (seen.add(component)) {
+                            println "resolved ${name}: ${component.moduleVersion.module}"
+                            component.dependencies.each { dependency ->
+                                if (dependency instanceof UnresolvedDependencyResult) {
+                                    throw new GradleException(
+                                            "Could not resolve ${dependency.requested} in ${name}: ${dependency.failure}")
+                                }
+                                queue.add(dependency.selected)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        """;
+
+    /**
+     * Without Gradle module metadata nothing aligns the version-less junit toolchain dependencies (normally the
+     * junit-bom does), so they only resolve if something else provides a version. When a test source set has no
+     * sources, the version-less dependencies are not needed and should not be added. (Gradle's default test suite
+     * still adds junit-jupiter, but with a version, so that one always resolves.)
+     */
+    private void pomOnlyBuildFile(RootProject rootProject) {
+        rootProject.buildGradle().plugins().add("java-library").add("com.palantir.baseline-testing");
+
+        rootProject.buildGradle().append("""
+            repositories {
+                mavenCentral {
+                    metadataSources {
+                        mavenPom()
+                        artifact()
+                        ignoreGradleMetadataRedirection()
+                    }
+                }
+            }
+            """);
+        rootProject.buildGradle().append(printResolvedTestClasspathsTask);
+    }
+
+    @Test
+    public void does_not_add_junit_toolchain_dependencies_without_test_sources(
+            GradleInvoker gradle, RootProject rootProject) {
+        pomOnlyBuildFile(rootProject);
+        rootProject.mainSourceSet().java().writeClass("""
+            package main;
+            public class Main {}
+            """);
+
+        InvocationResult result = gradle.withArgs("printResolvedTestClasspaths").buildsSuccessfully();
+
+        assertThat(result).output().doesNotContain("junit-platform-launcher");
+    }
+
+    @Test
+    public void does_not_add_junit_toolchain_dependencies_without_test_sources_for_test_sets(
+            GradleInvoker gradle, RootProject rootProject) {
+        pomOnlyBuildFile(rootProject);
+        rootProject.buildGradle().plugins().add("org.unbroken-dome.test-sets");
+        rootProject.buildGradle().append("""
+            testSets {
+                integrationTest
+            }
+            """);
+
+        InvocationResult result = gradle.withArgs("printResolvedTestClasspaths").buildsSuccessfully();
+
+        assertThat(result)
+                .output()
+                .contains("resolved integrationTestRuntimeClasspath")
+                .doesNotContain("junit-platform-launcher");
+    }
+
+    @Test
+    public void adds_junit_toolchain_dependencies_with_test_sources(GradleInvoker gradle, RootProject rootProject) {
+        standardBuildFile(rootProject);
+        rootProject.buildGradle().plugins().add("org.unbroken-dome.test-sets");
+        rootProject.buildGradle().append("""
+            testSets {
+                integrationTest
+            }
+            """);
+        rootProject.buildGradle().append(printResolvedTestClasspathsTask);
+        rootProject.testSourceSet().java().writeClass(junit5Test);
+        rootProject.file("src/integrationTest/java/test/JUnit5Test.java").append(junit5Test);
+
+        InvocationResult result = gradle.withArgs("printResolvedTestClasspaths").buildsSuccessfully();
+
+        assertThat(result)
+                .output()
+                .contains("resolved testCompileClasspath: org.junit.jupiter:junit-jupiter")
+                .contains("resolved testRuntimeClasspath: org.junit.platform:junit-platform-launcher")
+                .contains("resolved integrationTestCompileClasspath: org.junit.jupiter:junit-jupiter")
+                .contains("resolved integrationTestRuntimeClasspath: org.junit.platform:junit-platform-launcher");
+    }
+
     @Test
     public void running_Drecreate_true_will_re_run_tests_even_if_no_code_changes(
             GradleInvoker gradle, RootProject rootProject) {

@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.plugins.JvmTestSuitePlugin;
 import org.gradle.api.plugins.jvm.JvmTestSuite;
 import org.gradle.api.tasks.SourceSet;
@@ -105,8 +107,49 @@ public final class BaselineTesting implements Plugin<Project> {
                 }));
             });
 
+            // Both the jvm-test-suite toolchain (for the default test suite) and the block above add the junit
+            // toolchain dependencies to every test source set without a version, relying on the junit-bom (via Gradle
+            // module metadata) or a lock file/platform to supply one. Test source sets without any sources never
+            // run tests, so don't add these dependencies there: when nothing supplies a version (e.g. pom-only
+            // repositories combined with gradle-consistent-versions --write-locks) they fail to resolve.
+            SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+            sourceSets.configureEach(sourceSet -> project.getConfigurations()
+                    .matching(configuration ->
+                            configuration.getName().equals(sourceSet.getImplementationConfigurationName())
+                                    || configuration.getName().equals(sourceSet.getRuntimeOnlyConfigurationName()))
+                    .configureEach(configuration -> configuration.withDependencies(dependencies -> {
+                        if (isTestSourceSet(project, sourceSet) && hasNoSources(sourceSet)) {
+                            dependencies.removeIf(BaselineTesting::isVersionlessJunitToolchainDependency);
+                        }
+                    })));
+
             project.getTasks().withType(Test.class).configureEach(task -> configureTestTask(testingExtension, task));
         });
+    }
+
+    private static boolean isTestSourceSet(Project project, SourceSet sourceSet) {
+        return project.getTasks().withType(Test.class).getNames().contains(sourceSet.getName());
+    }
+
+    private static boolean hasNoSources(SourceSet sourceSet) {
+        // Source directories produced by tasks (generated sources) may not exist yet when the classpath is resolved,
+        // so only treat the source set as empty if none of its sources are generated.
+        return sourceSet
+                        .getAllSource()
+                        .getBuildDependencies()
+                        .getDependencies(null)
+                        .isEmpty()
+                && sourceSet.getAllSource().isEmpty();
+    }
+
+    private static boolean isVersionlessJunitToolchainDependency(Dependency dependency) {
+        if (!(dependency instanceof ExternalModuleDependency)) {
+            return false;
+        }
+        String version = dependency.getVersion();
+        String coordinate = dependency.getGroup() + ":" + dependency.getName();
+        return (version == null || version.isEmpty())
+                && (coordinate.equals(JUNIT_JUPITER) || coordinate.equals(JUNIT_PLATFORM_LAUNCHER));
     }
 
     private void configureTestTask(TestingExtension testingExtension, Test task) {
