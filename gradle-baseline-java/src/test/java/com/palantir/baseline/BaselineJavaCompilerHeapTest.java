@@ -60,6 +60,34 @@ class BaselineJavaCompilerHeapTest {
     }
 
     @Test
+    void adds_periodic_gc_to_compiler_daemons(GradleInvoker gradle, RootProject rootProject) {
+        rootProject.buildGradle().plugins().add("java");
+        rootProject.buildGradle().plugins().add("com.palantir.baseline-java-compiler-heap");
+
+        rootProject.buildGradle().append("""
+            repositories {
+                mavenCentral()
+            }
+
+            tasks.withType(JavaCompile).configureEach {
+                doFirst {
+                    logger.lifecycle("forkJvmArgs: {}", options.forkOptions.allJvmArgs)
+                }
+            }
+            """);
+
+        rootProject.mainSourceSet().java().writeClass("""
+            package com.example;
+
+            public class Main {}
+            """);
+
+        InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+        assertThat(result).output().contains("-XX:G1PeriodicGCInterval=5000");
+    }
+
+    @Test
     void test_overridden(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().plugins().add("java");
 
