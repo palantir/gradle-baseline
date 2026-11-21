@@ -36,7 +36,9 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestFrameworkOptions;
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
+import org.gradle.work.DisableCachingByDefault;
 
+@DisableCachingByDefault(because = "Not opting into build caching; explicit opt-out is required by Gradle 9.7")
 public abstract class CheckJUnitDependencies extends DefaultTask {
     @Input
     public abstract ListProperty<String> getErrorMessages();
