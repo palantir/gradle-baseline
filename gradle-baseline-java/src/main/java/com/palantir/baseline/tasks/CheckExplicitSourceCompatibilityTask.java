@@ -36,6 +36,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
+import org.gradle.work.DisableCachingByDefault;
 
 /**
  * By default, Gradle will infer sourceCompat based on whatever JVM is currently being used to evaluate the
@@ -44,6 +45,7 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
  *
  * Better to just require everyone to specify sourceCompatibility explicitly!
  */
+@DisableCachingByDefault(because = "Not opting into build caching; explicit opt-out is required by Gradle 9.7")
 public abstract class CheckExplicitSourceCompatibilityTask extends DefaultTask {
 
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
